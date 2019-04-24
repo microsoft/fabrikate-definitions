@@ -1,0 +1,3 @@
+name: bookinfo
+generator: helm
+path: ./charts/bookinfo

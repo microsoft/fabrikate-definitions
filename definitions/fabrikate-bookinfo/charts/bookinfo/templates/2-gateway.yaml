@@ -1,0 +1,30 @@
+################################################################################
+# Gateway
+################################################################################
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: bookinfo-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP2 # Changed from HTTP; broken in https://raw.githubusercontent.com/istio/istio/release-1.1/samples/bookinfo/networking/bookinfo-gateway.yaml
+      hosts:
+        - "*"
+      tls:
+        httpsRedirect: true # sends 301 redirect for http requests
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        serverCertificate: /etc/istio/ingressgateway-certs/tls.crt
+        privateKey: /etc/istio/ingressgateway-certs/tls.key
+      hosts:
+        - "*"

@@ -1,0 +1,10 @@
+name: production-demo
+generator: "static"
+path: "./manifests"
+subcomponents:
+  - name: cloud-native # In-cluster monitoring and service-mesh tooling
+    source: ../fabrikate-cloud-native
+  - name: bookinfo # Istio BookInfo application - wrapped in Fabrikate component
+    source: ../fabrikate-bookinfo
+  - name: azure-keyvault-flexvolume # Azure KeyVault FlexVolume support
+    source: ../fabrikate-keyvault-flexvolume

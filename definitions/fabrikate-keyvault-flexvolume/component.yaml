@@ -1,0 +1,8 @@
+name: keyvault-flexvolume
+generator: "static"
+path: "./tmp"
+hooks:
+  before-install:
+    - curl -OL https://raw.githubusercontent.com/Azure/kubernetes-keyvault-flexvol/master/deployment/kv-flexvol-installer.yaml
+    - mkdir tmp
+    - mv kv-flexvol-installer.yaml tmp

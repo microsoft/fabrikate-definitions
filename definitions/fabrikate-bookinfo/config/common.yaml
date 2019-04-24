@@ -1,0 +1,3 @@
+config:
+namespace: bookinfo
+injectNamespace: true # Namespace all templates
