@@ -2,6 +2,8 @@
 
 > An aggregated and curated collection of Fabrikate definitions/components
 
+[![Build Status](https://dev.azure.com/epicstuff/fabrikate-definitions/_apis/build/status/Microsoft.fabrikate-definitions?branchName=master)](https://dev.azure.com/epicstuff/fabrikate-definitions/_build/latest?definitionId=65&branchName=master)
+
 # Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
