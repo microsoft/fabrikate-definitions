@@ -1,0 +1,32 @@
+config:
+subcomponents:
+  elasticsearch-fluentd-kibana:
+    config:
+    subcomponents:
+      elasticsearch:
+        config:
+          master:
+            persistence:
+              storageClass: "managed-premium"
+              size: 4Gi
+          data:
+            persistence:
+              storageClass: "managed-premium"
+              size: 64Gi
+  prometheus-grafana:
+    config:
+    subcomponents:
+      grafana:
+        config:
+          persistence:
+            storageClassName: "managed-premium"
+      prometheus:
+        config:
+          alertmanager:
+            persistentVolume:
+              storageClass: "managed-premium"
+              size: 4Gi
+          server:
+            persistentVolume:
+              storageClass: "managed-premium"
+              size: 64Gi

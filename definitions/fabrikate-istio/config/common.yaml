@@ -1,0 +1,9 @@
+namespace: istio-system
+config:
+  name: istio
+  global:
+    k8sIngress:
+      enabled: true # Create the auto-generated ingress
+subcomponents:
+  istio-crd:
+    namespace: istio-system

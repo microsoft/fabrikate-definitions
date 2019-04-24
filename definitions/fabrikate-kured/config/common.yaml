@@ -1,0 +1,6 @@
+namespace: "kube-system"
+config:
+  image:
+    repository: weaveworks/kured
+  rbac:
+    create: true

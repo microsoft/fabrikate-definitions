@@ -10,3 +10,13 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Misc
+.DS_Store
+.idea.
+.vscode
+components
+fab
+generated
+helm_repos
+tmp

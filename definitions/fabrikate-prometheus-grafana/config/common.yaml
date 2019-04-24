@@ -1,0 +1,724 @@
+config:
+subcomponents:
+  prometheus:
+    namespace: prometheus
+    injectNamespace: true
+    config:
+      adminUser: "ops"
+      alertmanager:
+        persistentVolume:
+          storageClass: "default"
+      server:
+        persistentVolume:
+          storageClass": "default"
+      serverFiles:
+        rules:
+          groups:
+            - name: k8s.rules
+              rules:
+                - expr: |
+                    sum(rate(container_cpu_usage_seconds_total{job="kubelet", image!="", container_name!=""}[5m])) by (namespace)
+                  record: namespace:container_cpu_usage_seconds_total:sum_rate
+                - expr: |
+                    sum by (namespace, pod_name, container_name) (
+                    rate(container_cpu_usage_seconds_total{job="kubelet", image!="", container_name!=""}[5m])
+                    )
+                  record: namespace_pod_name_container_name:container_cpu_usage_seconds_total:sum_rate
+                - expr: |
+                    sum(container_memory_usage_bytes{job="kubelet", image!="", container_name!=""}) by (namespace)
+                  record: namespace:container_memory_usage_bytes:sum
+                - expr: |
+                    sum by (namespace, label_name) (
+                    sum(rate(container_cpu_usage_seconds_total{job="kubelet", image!="", container_name!=""}[5m])) by (namespace, pod_name)
+                    * on (namespace, pod_name) group_left(label_name)
+                    label_replace(kube_pod_labels{job="kube-state-metrics"}, "pod_name", "$1", "pod", "(.*)")
+                    )
+                  record: namespace_name:container_cpu_usage_seconds_total:sum_rate
+                - expr: |
+                    sum by (namespace, label_name) (
+                    sum(container_memory_usage_bytes{job="kubelet",image!="", container_name!=""}) by (pod_name, namespace)
+                    * on (namespace, pod_name) group_left(label_name)
+                    label_replace(kube_pod_labels{job="kube-state-metrics"}, "pod_name", "$1", "pod", "(.*)")
+                    )
+                  record: namespace_name:container_memory_usage_bytes:sum
+                - expr: |
+                    sum by (namespace, label_name) (
+                    sum(kube_pod_container_resource_requests_memory_bytes{job="kube-state-metrics"}) by (namespace, pod)
+                    * on (namespace, pod) group_left(label_name)
+                    label_replace(kube_pod_labels{job="kube-state-metrics"}, "pod_name", "$1", "pod", "(.*)")
+                    )
+                  record: namespace_name:kube_pod_container_resource_requests_memory_bytes:sum
+                - expr: |
+                    sum by (namespace, label_name) (
+                    sum(kube_pod_container_resource_requests_cpu_cores{job="kube-state-metrics"} and on(pod) kube_pod_status_scheduled{condition="true"}) by (namespace, pod)
+                    * on (namespace, pod) group_left(label_name)
+                    label_replace(kube_pod_labels{job="kube-state-metrics"}, "pod_name", "$1", "pod", "(.*)")
+                    )
+                  record: namespace_name:kube_pod_container_resource_requests_cpu_cores:sum
+            - name: node.rules
+              rules:
+                - expr: sum(min(kube_pod_info) by (node))
+                  record: ":kube_pod_info_node_count:"
+                - expr: |
+                    max(label_replace(kube_pod_info{component="kube-state-metrics"}, "pod", "$1", "pod", "(.*)")) by (node, namespace, pod)
+                  record: "node_namespace_pod:kube_pod_info:"
+                - expr: |
+                    count by (node) (sum by (node, cpu) (
+                    node_cpu_seconds_total{component="node-exporter"}
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    ))
+                  record: node:node_num_cpu:sum
+                - expr: |
+                    1 - avg(rate(node_cpu_seconds_total{component="node-exporter",mode="idle"}[1m]))
+                  record: :node_cpu_utilisation:avg1m
+                - expr: |
+                    1 - avg by (node) (
+                    rate(node_cpu_seconds_total{component="node-exporter",mode="idle"}[1m])
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:)
+                  record: node:node_cpu_utilisation:avg1m
+                - expr: |
+                    sum(node_load1{component="node-exporter"})
+                    /
+                     sum(node:node_num_cpu:sum)
+                  record: ":node_cpu_saturation_load1:"
+                - expr: |
+                    sum by (node) (
+                    node_load1{component="node-exporter"}
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                    /
+                    node:node_num_cpu:sum
+                  record: "node:node_cpu_saturation_load1:"
+                - expr: |
+                    1 -
+                    sum(node_memory_MemFree_bytes{component="node-exporter"} + node_memory_Cached_bytes{component="node-exporter"} + node_memory_Buffers_bytes{component="node-exporter"})
+                    /
+                    sum(node_memory_MemTotal_bytes{job="node-exporter"})
+                  record: ":node_memory_utilisation:"
+                - expr: |
+                    sum(node_memory_MemFree_bytes{component="node-exporter"} + node_memory_Cached_bytes{component="node-exporter"} + node_memory_Buffers_bytes{component="node-exporter"})
+                  record: :node_memory_MemFreeCachedBuffers_bytes:sum
+                - expr: |
+                    sum(node_memory_MemTotal_bytes{job="node-exporter"})
+                  record: :node_memory_MemTotal_bytes:sum
+                - expr: |
+                    sum by (node) (
+                    (node_memory_MemFree_bytes{component="node-exporter"} + node_memory_Cached_bytes{component="node-exporter"} + node_memory_Buffers_bytes{component="node-exporter"})
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_memory_bytes_available:sum
+                - expr: |
+                    sum by (node) (
+                    node_memory_MemTotal_bytes{component="node-exporter"}
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_memory_bytes_total:sum
+                - expr: |
+                    (node:node_memory_bytes_total:sum - node:node_memory_bytes_available:sum)
+                    /
+                    node:node_memory_bytes_total:sum
+                  record: node:node_memory_utilisation:ratio
+                - expr: |
+                    (node:node_memory_bytes_total:sum - node:node_memory_bytes_available:sum)
+                    /
+                    scalar(sum(node:node_memory_bytes_total:sum))
+                  record: node:cluster_memory_utilisation:ratio
+                - expr: |
+                    1e3 * sum(
+                    (rate(node_vmstat_pgpgin{component="node-exporter"}[1m])
+                    + rate(node_vmstat_pgpgout{component="node-exporter"}[1m]))
+                    )
+                  record: :node_memory_swap_io_bytes:sum_rate
+                - expr: |
+                    1 -
+                    sum by (node) (
+                    (node_memory_MemFree_bytes{component="node-exporter"} + node_memory_Cached_bytes{component="node-exporter"} + node_memory_Buffers_bytes{component="node-exporter"})
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                    /
+                    sum by (node) (
+                    node_memory_MemTotal_bytes{component="node-exporter"}
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: "node:node_memory_utilisation:"
+                - expr: |
+                    1 - (node:node_memory_bytes_available:sum / node:node_memory_bytes_total:sum)
+                  record: "node:node_memory_utilisation_2:"
+                - expr: |
+                    1e3 * sum by (node) (
+                    (rate(node_vmstat_pgpgin{component="node-exporter"}[1m])
+                    + rate(node_vmstat_pgpgout{component="node-exporter"}[1m]))
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_memory_swap_io_bytes:sum_rate
+                - expr: |
+                    avg(irate(node_disk_io_time_seconds_total{component="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]))
+                  record: :node_disk_utilisation:avg_irate
+                - expr: |
+                    avg by (node) (
+                    irate(node_disk_io_time_seconds_total{component="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m])
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_disk_utilisation:avg_irate
+                - expr: |
+                    avg(irate(node_disk_io_time_weighted_seconds_total{component="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]) / 1e3)
+                  record: :node_disk_saturation:avg_irate
+                - expr: |
+                    avg by (node) (
+                    irate(node_disk_io_time_weighted_seconds_total{component="node-exporter",device=~"nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+"}[1m]) / 1e3
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_disk_saturation:avg_irate
+                - expr: |
+                    max by (namespace, pod, device) ((node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"}
+                    - node_filesystem_avail_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
+                    / node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
+                  record: "node:node_filesystem_usage:"
+                - expr: |
+                    max by (namespace, pod, device) (node_filesystem_avail_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"} / node_filesystem_size_bytes{fstype=~"ext[234]|btrfs|xfs|zfs"})
+                  record: "node:node_filesystem_avail:"
+                - expr: |
+                    sum(irate(node_network_receive_bytes_total{component="node-exporter",device!~"veth.+"}[1m])) +
+                    sum(irate(node_network_transmit_bytes_total{component="node-exporter",device!~"veth.+"}[1m]))
+                  record: :node_net_utilisation:sum_irate
+                - expr: |
+                    sum by (node) (
+                    (irate(node_network_receive_bytes_total{component="node-exporter",device!~"veth.+"}[1m]) +
+                    irate(node_network_transmit_bytes_total{component="node-exporter",device!~"veth.+"}[1m]))
+                    * on (namespace, pod) group_left(node)
+                    node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_net_utilisation:sum_irate
+                - expr: |
+                    sum(irate(node_network_receive_drop_total{component="node-exporter",device!~"veth.+"}[1m])) +
+                    sum(irate(node_network_transmit_drop_total{component="node-exporter",device!~"veth.+"}[1m]))
+                  record: :node_net_saturation:sum_irate
+                - expr: |
+                    sum by (node) (
+                     (irate(node_network_receive_drop_total{component="node-exporter",device!~"veth.+"}[1m]) +
+                     irate(node_network_transmit_drop_total{component="node-exporter",device!~"veth.+"}[1m]))
+                     * on (namespace, pod) group_left(node)
+                     node_namespace_pod:kube_pod_info:
+                    )
+                  record: node:node_net_saturation:sum_irate
+                - expr: |
+                    max(
+                     max(
+                       kube_pod_info{component="kube-state-metrics", host_ip!=""}
+                     ) by (node, host_ip)
+                     * on (host_ip) group_right (node)
+                     label_replace(
+                       (max(node_filesystem_files{component="node-exporter", mountpoint="/"}) by (instance)), "host_ip", "$1", "instance", "(.*):.*"
+                     )
+                    ) by (node)
+                  record: "node:node_inodes_total:"
+                - expr: |
+                    max(
+                     max(
+                       kube_pod_info{job="kube-state-metrics", host_ip!=""}
+                     ) by (node, host_ip)
+                     * on (host_ip) group_right (node)
+                     label_replace(
+                       (max(node_filesystem_files_free{component="node-exporter", mountpoint="/"}) by (instance)), "host_ip", "$1", "instance", "(.*):.*"
+                     )
+                    ) by (node)
+                  record: "node:node_inodes_free:"
+            - name: kube-prometheus-node-recording.rules
+              rules:
+                - expr:
+                    sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait"}[3m])) BY
+                    (instance)
+                  record: instance:node_cpu:rate:sum
+                - expr:
+                    sum((node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}))
+                    BY (instance)
+                  record: instance:node_filesystem_usage:sum
+                - expr: sum(rate(node_network_receive_bytes_total[3m])) BY (instance)
+                  record: instance:node_network_receive_bytes:rate:sum
+                - expr: sum(rate(node_network_transmit_bytes_total[3m])) BY (instance)
+                  record: instance:node_network_transmit_bytes:rate:sum
+                - expr:
+                    sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait"}[5m])) WITHOUT
+                    (cpu, mode) / ON(instance) GROUP_LEFT() count(sum(node_cpu_seconds_total)
+                    BY (instance, cpu)) BY (instance)
+                  record: instance:node_cpu:ratio
+                - expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait"}[5m]))
+                  record: cluster:node_cpu:sum_rate5m
+                - expr:
+                    cluster:node_cpu_seconds_total:rate5m / count(sum(node_cpu_seconds_total)
+                    BY (instance, cpu))
+                  record: cluster:node_cpu:ratio
+        alerts:
+          groups:
+            - name: kubernetes-apps
+              rules:
+                - alert: KubePodCrashLooping
+                  annotations:
+                    message:
+                      Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container
+                      }}) is restarting {{ printf "%.2f" $value }} times / 5 minutes.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepodcrashlooping
+                  expr: |
+                    rate(kube_pod_container_status_restarts_total{component="kube-state-metrics"}[15m]) * 60 * 5 > 0
+                  for: 1h
+                  labels:
+                    severity: critical
+                - alert: KubePodNotReady
+                  annotations:
+                    message:
+                      Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready
+                      state for longer than an hour.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepodnotready
+                  expr: |
+                    sum by (namespace, pod) (kube_pod_status_phase{component="kube-state-metrics", phase=~"Pending|Unknown"}) > 0
+                  for: 1h
+                  labels:
+                    severity: critical
+                - alert: KubeDeploymentGenerationMismatch
+                  annotations:
+                    message:
+                      Deployment generation for {{ $labels.namespace }}/{{ $labels.deployment
+                      }} does not match, this indicates that the Deployment has failed but has
+                      not been rolled back.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubedeploymentgenerationmismatch
+                  expr: |
+                    kube_deployment_status_observed_generation{component="kube-state-metrics"}
+                      !=
+                    kube_deployment_metadata_generation{component="kube-state-metrics"}
+                  for: 15m
+                  labels:
+                    severity: critical
+                - alert: KubeDeploymentReplicasMismatch
+                  annotations:
+                    message:
+                      Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has not
+                      matched the expected number of replicas for longer than an hour.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubedeploymentreplicasmismatch
+                  expr: |
+                    kube_deployment_spec_replicas{component="kube-state-metrics"}
+                      !=
+                    kube_deployment_status_replicas_available{component="kube-state-metrics"}
+                  for: 1h
+                  labels:
+                    severity: critical
+                - alert: KubeStatefulSetReplicasMismatch
+                  annotations:
+                    message:
+                      StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} has
+                      not matched the expected number of replicas for longer than 15 minutes.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubestatefulsetreplicasmismatch
+                  expr: |
+                    kube_statefulset_status_replicas_ready{component="kube-state-metrics"}
+                     !=
+                    kube_statefulset_status_replicas{component="kube-state-metrics"}
+                  for: 15m
+                  labels:
+                    severity: critical
+                - alert: KubeStatefulSetGenerationMismatch
+                  annotations:
+                    message:
+                      StatefulSet generation for {{ $labels.namespace }}/{{ $labels.statefulset
+                      }} does not match, this indicates that the StatefulSet has failed but has
+                      not been rolled back.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubestatefulsetgenerationmismatch
+                  expr: |
+                    kube_statefulset_status_observed_generation{component="kube-state-metrics"}
+                      !=
+                    kube_statefulset_metadata_generation{component="kube-state-metrics"}
+                  for: 15m
+                  labels:
+                    severity: critical
+                - alert: KubeStatefulSetUpdateNotRolledOut
+                  annotations:
+                    message:
+                      StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} update
+                      has not been rolled out.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubestatefulsetupdatenotrolledout
+                  expr: |
+                    max without (revision) (
+                      kube_statefulset_status_current_revision{component="kube-state-metrics"}
+                        unless
+                      kube_statefulset_status_update_revision{component="kube-state-metrics"}
+                    )
+                      *
+                    (
+                      kube_statefulset_replicas{component="kube-state-metrics"}
+                        !=
+                      kube_statefulset_status_replicas_updated{component="kube-state-metrics"}
+                    )
+                  for: 15m
+                  labels:
+                    severity: critical
+                - alert: KubeDaemonSetRolloutStuck
+                  annotations:
+                    message:
+                      Only {{ $value }}% of the desired Pods of DaemonSet {{ $labels.namespace
+                      }}/{{ $labels.daemonset }} are scheduled and ready.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubedaemonsetrolloutstuck
+                  expr: |
+                    kube_daemonset_status_number_ready{component="kube-state-metrics"}
+                      /
+                    kube_daemonset_status_desired_number_scheduled{component="kube-state-metrics"} * 100 < 100
+                  for: 15m
+                  labels:
+                    severity: critical
+                - alert: KubeDaemonSetNotScheduled
+                  annotations:
+                    message:
+                      "{{ $value }} Pods of DaemonSet {{ $labels.namespace }}/{{ $labels.daemonset
+                      }} are not scheduled."
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubedaemonsetnotscheduled
+                  expr: |
+                    kube_daemonset_status_desired_number_scheduled{component="kube-state-metrics"}
+                      -
+                    kube_daemonset_status_current_number_scheduled{component="kube-state-metrics"} > 0
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: KubeDaemonSetMisScheduled
+                  annotations:
+                    message:
+                      "{{ $value }} Pods of DaemonSet {{ $labels.namespace }}/{{ $labels.daemonset
+                      }} are running where they are not supposed to run."
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubedaemonsetmisscheduled
+                  expr: |
+                    kube_daemonset_status_number_misscheduled{component="kube-state-metrics"} > 0
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: KubeCronJobRunning
+                  annotations:
+                    message:
+                      CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is taking more
+                      than 1h to complete.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubecronjobrunning
+                  expr: |
+                    time() - kube_cronjob_next_schedule_time{component="kube-state-metrics"} > 3600
+                  for: 1h
+                  labels:
+                    severity: warning
+                - alert: KubeJobCompletion
+                  annotations:
+                    message:
+                      Job {{ $labels.namespace }}/{{ $labels.job_name }} is taking more
+                      than one hour to complete.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobcompletion
+                  expr: |
+                    kube_job_spec_completions{component="kube-state-metrics"} - kube_job_status_succeeded{component="kube-state-metrics"}  > 0
+                  for: 1h
+                  labels:
+                    severity: warning
+                - alert: KubeJobFailed
+                  annotations:
+                    message: Job {{ $labels.namespace }}/{{ $labels.job_name }} failed to complete.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobfailed
+                  expr: |
+                    kube_job_status_failed{component="kube-state-metrics"}  > 0
+                  for: 1h
+                  labels:
+                    severity: warning
+            - name: kubernetes-resources
+              rules:
+                - alert: KubeCPUOvercommit
+                  annotations:
+                    message:
+                      Cluster has overcommitted CPU resource requests for Pods and cannot
+                      tolerate node failure.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubecpuovercommit
+                  expr: |
+                    sum(namespace_name:kube_pod_container_resource_requests_cpu_cores:sum)
+                      /
+                    sum(node:node_num_cpu:sum)
+                      >
+                    (count(node:node_num_cpu:sum)-1) / count(node:node_num_cpu:sum)
+                  for: 5m
+                  labels:
+                    severity: warning
+                - alert: KubeMemOvercommit
+                  annotations:
+                    message:
+                      Cluster has overcommitted memory resource requests for Pods and cannot
+                      tolerate node failure.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubememovercommit
+                  expr: |
+                    sum(namespace_name:kube_pod_container_resource_requests_memory_bytes:sum)
+                      /
+                    sum(node_memory_MemTotal_bytes)
+                      >
+                    (count(node:node_num_cpu:sum)-1)
+                      /
+                    count(node:node_num_cpu:sum)
+                  for: 5m
+                  labels:
+                    severity: warning
+            - name: kubernetes-storage
+              rules:
+                - alert: KubePersistentVolumeUsageCritical
+                  annotations:
+                    message:
+                      The PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                      }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f" $value
+                      }}% free.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumeusagecritical
+                  expr: |
+                    100 * kubelet_volume_stats_available_bytes{job="kubernetes-nodes"}
+                      /
+                    kubelet_volume_stats_capacity_bytes{job="kubernetes-nodes"}
+                      < 3
+                  for: 1m
+                  labels:
+                    severity: critical
+                - alert: KubePersistentVolumeFullInFourDays
+                  annotations:
+                    message:
+                      Based on recent sampling, the PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                      }} in Namespace {{ $labels.namespace }} is expected to fill up within four
+                      days. Currently {{ printf "%0.2f" $value }}% is available.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumefullinfourdays
+                  expr: |
+                    100 * (
+                      kubelet_volume_stats_available_bytes{job="kubernetes-nodes"}
+                        /
+                      kubelet_volume_stats_capacity_bytes{job="kubernetes-nodes"}
+                    ) < 15
+                    and
+                    predict_linear(kubelet_volume_stats_available_bytes{job="kubernetes-nodes"}[6h], 4 * 24 * 3600) < 0
+                  for: 5m
+                  labels:
+                    severity: critical
+                - alert: KubePersistentVolumeErrors
+                  annotations:
+                    message:
+                      The persistent volume {{ $labels.persistentvolume }} has status {{
+                      $labels.phase }}.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubepersistentvolumeerrors
+                  expr: |
+                    kube_persistentvolume_status_phase{phase=~"Failed|Pending",component="kube-state-metrics"} > 0
+                  for: 5m
+                  labels:
+                    severity: critical
+            - name: kubernetes-system
+              rules:
+                - alert: KubeNodeNotReady
+                  annotations:
+                    message: "{{ $labels.node }} has been unready for more than an hour."
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubenodenotready
+                  expr: |
+                    kube_node_status_condition{component="kube-state-metrics",condition="Ready",status="true"} == 0
+                  for: 1h
+                  labels:
+                    severity: warning
+                - alert: KubeClientErrors
+                  annotations:
+                    message: Kubernetes API server client '{{ $labels.job }}/{{ $labels.instance}} is experiencing {{ printf "%0.0f" $value }}% errors.'
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclienterrors
+                  expr: |
+                    (sum(rate(rest_client_requests_total{code=~"5.."}[5m])) by (instance, job)
+                      /
+                    sum(rate(rest_client_requests_total[5m])) by (instance, job))
+                    * 100 > 1
+                  for: 15m
+                  labels:
+                    severity: warning
+                - alert: KubeClientErrors
+                  annotations:
+                    message: 'Kubernetes API server client {{ $labels.job }}/{{ $labels.instance}} is experiencing {{ printf "%0.0f" $value }} errors / second.'
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclienterrors
+                  expr: |
+                    sum(rate(ksm_scrape_error_total{job="kube-state-metrics"}[5m])) by (instance, job) > 0.1
+                  for: 15m
+                  labels:
+                    severity: warning
+                - alert: KubeletTooManyPods
+                  annotations:
+                    message: Kubelet {{ $labels.instance }} is running {{ $value }} Pods, close to the limit of 110.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubelettoomanypods
+                  expr: |
+                    kubelet_running_pod_count{kubernetes_io_role="agent"} > 110 * 0.9
+                  for: 15m
+                  labels:
+                    severity: warning
+                - alert: KubeClientCertificateExpiration
+                  annotations:
+                    message: A client certificate used to authenticate to the apiserver is expiring in less than 7 days.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclientcertificateexpiration
+                  expr: |
+                    histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{kubernetes_io_role="apiserver"}[5m]))) < 604800
+                  labels:
+                    severity: warning
+                - alert: KubeClientCertificateExpiration
+                  annotations:
+                    message:
+                      A client certificate used to authenticate to the apiserver is expiring
+                      in less than 24 hours.
+                    runbook_url: https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubeclientcertificateexpiration
+                  expr: |
+                    histogram_quantile(0.01, sum by (job, le) (rate(apiserver_client_certificate_expiration_seconds_bucket{kubernetes_io_role="apiserver"}[5m]))) < 86400
+                  labels:
+                    severity: critical
+            - name: prometheus.rules
+              rules:
+                - alert: PrometheusConfigReloadFailed
+                  annotations:
+                    description: Reloading Prometheus' configuration has failed for {{$labels.namespace}}/{{$labels.pod}}
+                    summary: Reloading Prometheus' configuration failed
+                  expr: |
+                    prometheus_config_last_reload_successful{job="prometheus"} == 0
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: PrometheusNotificationQueueRunningFull
+                  annotations:
+                    description:
+                      Prometheus' alert notification queue is running full for {{$labels.namespace}}/{{
+                      $labels.pod}}
+                    summary: Prometheus' alert notification queue is running full
+                  expr: |
+                    predict_linear(prometheus_notifications_queue_length{job="prometheus"}[5m], 60 * 30) > prometheus_notifications_queue_capacity{job="prometheus"}
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: PrometheusErrorSendingAlerts
+                  annotations:
+                    description:
+                      Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
+                      $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+                    summary: Errors while sending alert from Prometheus
+                  expr: |
+                    rate(prometheus_notifications_errors_total{job="prometheus"}[5m]) / rate(prometheus_notifications_sent_total{job="prometheus"}[5m]) > 0.01
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: PrometheusErrorSendingAlerts
+                  annotations:
+                    description:
+                      Errors while sending alerts from Prometheus {{$labels.namespace}}/{{
+                      $labels.pod}} to Alertmanager {{$labels.Alertmanager}}
+                    summary: Errors while sending alerts from Prometheus
+                  expr: |
+                    rate(prometheus_notifications_errors_total{job="prometheus"}[5m]) / rate(prometheus_notifications_sent_total{job="prometheus"}[5m]) > 0.03
+                  for: 10m
+                  labels:
+                    severity: critical
+                - alert: PrometheusNotConnectedToAlertmanagers
+                  annotations:
+                    description:
+                      Prometheus {{ $labels.namespace }}/{{ $labels.pod}} is not connected
+                      to any Alertmanagers
+                    summary: Prometheus is not connected to any Alertmanagers
+                  expr: |
+                    prometheus_notifications_alertmanagers_discovered{job="prometheus"} < 1
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: PrometheusTSDBReloadsFailing
+                  annotations:
+                    description:
+                      "{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+                      reload failures over the last four hours."
+                    summary: Prometheus has issues reloading data blocks from disk
+                  expr: |
+                    increase(prometheus_tsdb_reloads_failures_total{job="prometheus"}[2h]) > 0
+                  for: 12h
+                  labels:
+                    severity: warning
+                - alert: PrometheusTSDBCompactionsFailing
+                  annotations:
+                    description:
+                      "{{$labels.job}} at {{$labels.instance}} had {{$value | humanize}}
+                      compaction failures over the last four hours."
+                    summary: Prometheus has issues compacting sample blocks
+                  expr: |
+                    increase(prometheus_tsdb_compactions_failed_total{job="prometheus"}[2h]) > 0
+                  for: 12h
+                  labels:
+                    severity: warning
+                - alert: PrometheusTSDBWALCorruptions
+                  annotations:
+                    description:
+                      "{{$labels.job}} at {{$labels.instance}} has a corrupted write-ahead
+                      log (WAL)."
+                    summary: Prometheus write-ahead log is corrupted
+                  expr: |
+                    prometheus_tsdb_wal_corruptions_total{job="prometheus"} > 0
+                  for: 4h
+                  labels:
+                    severity: warning
+                - alert: PrometheusNotIngestingSamples
+                  annotations:
+                    description:
+                      Prometheus {{ $labels.namespace }}/{{ $labels.pod}} isn't ingesting
+                      samples.
+                    summary: Prometheus isn't ingesting samples
+                  expr: |
+                    rate(prometheus_tsdb_head_samples_appended_total{job="prometheus"}[5m]) <= 0
+                  for: 10m
+                  labels:
+                    severity: warning
+                - alert: PrometheusTargetScrapesDuplicate
+                  annotations:
+                    description:
+                      "{{$labels.namespace}}/{{$labels.pod}} has many samples rejected
+                      due to duplicate timestamps but different values"
+                    summary: Prometheus has many samples rejected
+                  expr: |
+                    increase(prometheus_target_scrapes_sample_duplicate_timestamp_total{job="prometheus"}[5m]) > 0
+                  for: 10m
+                  labels:
+                    severity: warning
+  prometheus-adapter:
+    config:
+      namespace: "prometheus"
+      prometheus:
+        url: http://prometheus-server.prometheus.svc.cluster.local
+  grafana:
+    namespace: grafana
+    injectNamespace: true
+    config:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc.cluster.local
+              access: proxy
+              isDefault: true
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+            - name: default
+              orgId: 1
+              folder:
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+      dashboards:
+        default:
+          cluster-metrics:
+            gnetId: 6417
+            revision: 1
+            datasource: Prometheus
+          persistent-volumes:
+            gnetId: 6739
+            revision: 1
+            datasource: Prometheus
+      persistence:
+        enabled: true
+        storageClassName: default
+        accessModes:
+          - ReadWriteOnce
+        size: 4Gi

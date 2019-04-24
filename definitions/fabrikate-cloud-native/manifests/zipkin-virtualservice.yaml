@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  namespace: istio-system
+  name: zipkin
+spec:
+  hosts:
+    - zipkin.jaeger.svc.cluster.local
+  http:
+    - match:
+        - port: 9411
+      route:
+        - destination:
+            host: zipkin.jaeger.svc.cluster.local
+            port:
+              number: 9411

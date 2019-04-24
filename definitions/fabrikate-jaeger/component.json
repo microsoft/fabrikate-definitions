@@ -1,0 +1,17 @@
+{
+  "name": "fabrikate-jaeger",
+  "generator": "static",
+  "path": "./manifests",
+  "subcomponents": [
+    {
+      "name": "jaeger",
+      "generator": "helm",
+      "repositories": {
+        "incubator": "https://kubernetes-charts-incubator.storage.googleapis.com/"
+      },
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "incubator/jaeger"
+    }
+  ]
+}

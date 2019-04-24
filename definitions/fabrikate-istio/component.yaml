@@ -1,0 +1,17 @@
+name: istio
+generator: helm
+path: "./tmp/istio-1.1.2/install/kubernetes/helm/istio"
+hooks:
+  before-install:
+    - curl -Lv https://github.com/istio/istio/releases/download/1.1.2/istio-1.1.2-linux.tar.gz -o istio.tar.gz
+    - mkdir -p tmp
+    - tar xvf istio.tar.gz -C tmp
+  after-install:
+    - rm istio.tar.gz
+subcomponents:
+  - name: istio-namespace
+    generator: static
+    path: ./manifests
+  - name: istio-crd # 1.1 split out CRDs to seperate chart
+    generator: helm
+    path: "./tmp/istio-1.1.2/install/kubernetes/helm/istio-init"
