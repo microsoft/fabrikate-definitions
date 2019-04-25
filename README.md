@@ -16,7 +16,8 @@ which you can use as components for your Kubernetes cluster.
 This repository acts as an aggregation repository of commonly used Fabrikate definitions; some
 definitions utilize other definitions defined within this repository. As such, to utilize a definition
 from here, you should define your components [`source`](https://github.com/Microsoft/fabrikate/blob/master/docs/component.md)
-as this git repository and use the `path` argument as the relative path to the target component itself.
+as this git repository and use the [`path`](https://github.com/Microsoft/fabrikate/blob/master/docs/component.md)
+argument as the relative path to the target component itself.
 
 In this example we'll deploy the
 [cloud-native](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-cloud-native)
