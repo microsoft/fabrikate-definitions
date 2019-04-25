@@ -21,18 +21,14 @@ argument as the relative path to the target component itself.
 
 In this example we'll deploy the
 [cloud-native](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-cloud-native)
-infrastructure stack,
-[Istio's Bookinfo application](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo),
-and Azure
-[Keyvault Flexvolume](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-keyvault-flexvolume)
+infrastructure stack and
+[Istio's Bookinfo application](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo)
 components to simulate what a full production cluster component may look like.
 
 Define your top level cluster definitions as such:
 
 ```yaml
 name: my-cluster
-generator: "static"
-path: "./manifests"
 subcomponents:
   - name: cloud-native # In-cluster monitoring and service-mesh tooling
     source: https://github.com/Microsoft/fabrikate-definitions.git
@@ -41,10 +37,6 @@ subcomponents:
   - name: bookinfo # Istio BookInfo application - wrapped in Fabrikate component
     source: https://github.com/Microsoft/fabrikate-definitions.git
     path: definitions/fabrikate-bookinfo
-    method: git
-  - name: azure-keyvault-flexvolume # Azure KeyVault FlexVolume support
-    source: https://github.com/Microsoft/fabrikate-definitions.git
-    path: definitions/fabrikate-keyvault-flexvolume
     method: git
 ```
 
