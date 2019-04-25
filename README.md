@@ -22,7 +22,7 @@ argument as the relative path to the target component itself.
 In this example we'll deploy the
 [cloud-native](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-cloud-native)
 infrastructure stack and
-[Istio's Bookinfo application](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo)
+[Istio's BookInfo application](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo)
 components to simulate what a full production cluster component may look like.
 
 Define your top level cluster definitions as such:
