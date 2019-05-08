@@ -1,0 +1,13 @@
+name: fabrikate-linkerd
+generator: static
+path: "./manifests"
+subcomponents:
+  - name: linkerd
+    generator: static
+    path: "./manifests"
+    hooks:
+      before-install:
+        - curl -sL https://run.linkerd.io/install | sh
+        - ~/.linkerd2/bin/linkerd install > manifests/linkerd.yaml
+      after-install:
+        - rm -r ~/.linkerd2/bin
