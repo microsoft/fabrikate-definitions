@@ -1,0 +1,9 @@
+# azure:
+#  subscriptionId:
+#  tenantId:
+#  clientId:
+#  clientSecret:
+#  clusterResourceGroup:
+#  storageResourceGroup:
+#  storageAccount:
+#  container:
