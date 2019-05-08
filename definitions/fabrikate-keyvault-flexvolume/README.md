@@ -10,7 +10,7 @@
   "subcomponents": [
     {
       "name": "fabrikate-keyvault-flexvolume",
-      "source": "https://github.com/Microsoft/fabrikate-definitions",
+      "source": "https://github.com/microsoft/fabrikate-definitions",
       "path": "definitions/fabrikate-keyvault-flexvolume",
       "method": "git"
     }
@@ -24,7 +24,7 @@ Or if you're using a `component.yaml`:
 name: my-cool-stack
 subcomponents:
   - name: fabrikate-keyvault-flexvolume
-    source: https://github.com/Microsoft/fabrikate-definitions
+    source: https://github.com/microsoft/fabrikate-definitions
     path: definitions/fabrikate-keyvault-flexvolume
     method: "git"
 ```

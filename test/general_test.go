@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Microsoft/fabrikate/cmd"
+	"github.com/microsoft/fabrikate/cmd"
 )
 
 func getAllComponentDirectories() ([]string, error) {

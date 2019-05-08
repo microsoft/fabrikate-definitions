@@ -4,25 +4,25 @@
 
 [![Build Status](https://dev.azure.com/epicstuff/fabrikate-definitions/_apis/build/status/Microsoft.fabrikate-definitions?branchName=master)](https://dev.azure.com/epicstuff/fabrikate-definitions/_build/latest?definitionId=65&branchName=master)
 
-Here you can find a curated listed of [Fabrikate](https://github.com/Microsoft/fabrikate) definitions
+Here you can find a curated listed of [Fabrikate](https://github.com/microsoft/fabrikate) definitions
 which you can use as components for your Kubernetes cluster.
 
 ## Requirements
 
-[Fabrikate](https://github.com/Microsoft/fabrikate) >= 0.5.2
+[Fabrikate](https://github.com/microsoft/fabrikate) >= 0.5.2
 
 ## Example Usage
 
 This repository acts as an aggregation repository of commonly used Fabrikate definitions; some
 definitions utilize other definitions defined within this repository. As such, to utilize a definition
-from here, you should define your components [`source`](https://github.com/Microsoft/fabrikate/blob/master/docs/component.md)
-as this git repository and use the [`path`](https://github.com/Microsoft/fabrikate/blob/master/docs/component.md)
+from here, you should define your components [`source`](https://github.com/microsoft/fabrikate/blob/master/docs/component.md)
+as this git repository and use the [`path`](https://github.com/microsoft/fabrikate/blob/master/docs/component.md)
 argument as the relative path to the target component itself.
 
 In this example we'll deploy the
-[cloud-native](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-cloud-native)
+[cloud-native](https://github.com/microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-cloud-native)
 infrastructure stack and
-[Istio's BookInfo application](https://github.com/Microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo)
+[Istio's BookInfo application](https://github.com/microsoft/fabrikate-definitions/tree/master/definitions/fabrikate-bookinfo)
 components to simulate what a full production cluster component may look like.
 
 Define your top level cluster definitions as such:
@@ -31,11 +31,11 @@ Define your top level cluster definitions as such:
 name: my-cluster
 subcomponents:
   - name: cloud-native # In-cluster monitoring and service-mesh tooling
-    source: https://github.com/Microsoft/fabrikate-definitions.git
+    source: https://github.com/microsoft/fabrikate-definitions.git
     path: definitions/fabrikate-cloud-native
     method: git
   - name: bookinfo # Istio BookInfo application - wrapped in Fabrikate component
-    source: https://github.com/Microsoft/fabrikate-definitions.git
+    source: https://github.com/microsoft/fabrikate-definitions.git
     path: definitions/fabrikate-bookinfo
     method: git
 ```

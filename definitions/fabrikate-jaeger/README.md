@@ -28,7 +28,7 @@ helm repo remove incubator && helm repo add incubator https://kubernetes-charts-
   "subcomponents": [
     {
       "name": "fabrikate-jaeger",
-      "source": "https://github.com/Microsoft/fabrikate-definitions",
+      "source": "https://github.com/microsoft/fabrikate-definitions",
       "path": "definitions/fabrikate-jaeger",
       "method": "git"
     }
