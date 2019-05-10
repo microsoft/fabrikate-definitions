@@ -1,0 +1,9 @@
+name: "velero"
+generator: "helm"
+source: "https://github.com/helm/charts"
+method: "git"
+path: "stable/velero"
+subcomponents:
+  - name: "static"
+    generator: "static"
+    path: "./manifests"
