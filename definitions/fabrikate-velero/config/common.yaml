@@ -1,0 +1,2 @@
+namespace: "velero"
+injectNamespace: true
