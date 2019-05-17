@@ -9,9 +9,9 @@ Add the following to your component.yaml:
 ```yaml
 subcomponents:
   - name: "velero"
-    source: https://github.com/microsoft/fabrikate-definitions.git
-    path: definitions/fabrikate-velero
-    method: git
+    source: "https://github.com/microsoft/fabrikate-definitions.git"
+    path: "definitions/fabrikate-velero"
+    method: "git"
 ```
 
 For the Azure cloud platform you will need to apply the following configuration to Velero as part of a config file (where `velero` is the subcomponent):
