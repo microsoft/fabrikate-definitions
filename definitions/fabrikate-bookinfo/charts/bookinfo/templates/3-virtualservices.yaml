@@ -1,3 +1,5 @@
+{{ if .Values.installIstioServices }}
+
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -45,3 +47,5 @@ spec:
             host: reviews
             subset: v3
           weight: 25
+
+{{ end }}

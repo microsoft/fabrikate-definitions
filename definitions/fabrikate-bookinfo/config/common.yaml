@@ -1,3 +1,4 @@
 config:
+  installIstioServices: true # Setup VirtualServices to work with Istio
 namespace: bookinfo
 injectNamespace: true # Namespace all templates
