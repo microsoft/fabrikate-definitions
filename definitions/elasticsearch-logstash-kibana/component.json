@@ -1,0 +1,35 @@
+{
+  "name": "elasticsearch-logstash-kibana",
+  "generator": "static",
+  "path": "./manifests",
+  "subcomponents": [
+    {
+      "name": "elasticsearch",
+      "generator": "helm",
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "stable/elasticsearch"
+    },
+    {
+      "name": "elasticsearch-curator",
+      "generator": "helm",
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "stable/elasticsearch-curator"
+    },
+    {
+      "name": "logstash",
+      "generator": "helm",
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "stable/logstash"
+    },
+    {
+      "name": "kibana",
+      "generator": "helm",
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "stable/kibana"
+    }
+  ]
+}
