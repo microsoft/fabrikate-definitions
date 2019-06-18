@@ -1,9 +1,11 @@
 name: "kured"
-generator: "helm"
+generator: helm # Deprecated in fabrikate v1.0.0
+type: helm # Replaces `generator` in fabrikate v1.0.0
 source: "https://github.com/helm/charts"
 method: "git"
 path: "stable/kured"
 subcomponents:
   - name: "static"
-    generator: "static"
+    generator: static # Deprecated in fabrikate v1.0.0
+    type: static # Replaces `generator` in fabrikate v1.0.0
     path: "./manifests"

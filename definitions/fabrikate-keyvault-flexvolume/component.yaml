@@ -1,5 +1,6 @@
 name: keyvault-flexvolume
-generator: "static"
+generator: static # Deprecated in fabrikate v1.0.0
+type: static # Replaces `generator` in fabrikate v1.0.0
 path: "./tmp"
 hooks:
   before-install:
