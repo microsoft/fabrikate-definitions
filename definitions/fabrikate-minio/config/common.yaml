@@ -1,0 +1,2 @@
+namespace: "minio"
+injectNamespace: true
