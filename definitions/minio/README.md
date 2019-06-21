@@ -10,7 +10,7 @@ Add the following to your component.yaml:
 subcomponents:
   - name: "minio"
     source: "https://github.com/microsoft/fabrikate-definitions.git"
-    path: "definitions/fabrikate-minio"
+    path: "definitions/minio"
     method: "git"
 ```
 
