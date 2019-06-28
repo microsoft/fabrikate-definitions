@@ -4,6 +4,7 @@ type: "helm"
 path: "helm-charts/strimzi-kafka-operator"
 method: "git"
 source: "https://github.com/strimzi/strimzi-kafka-operator/"
+version: "668b852c35673d288fe9fe967d1f5148b0d3cc78"
 repositories: {
   "helm-charts": "http://strimzi.io/charts/"
 }
