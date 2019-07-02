@@ -1,0 +1,8 @@
+name: "kafka"
+generator: "static"
+path: "./manifests"
+subcomponents:
+  - name: "strimzi-kafka-operator"
+    source: "components/strimzi-kafka-operator"
+  - name: "confluent-schema-registry"
+    source: "components/confluent-schema-registry"

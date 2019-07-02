@@ -1,0 +1,8 @@
+name: "confluent-schema-registry"
+type: "helm"
+source: "https://github.com/helm/charts"
+method: "git"
+path: "incubator/schema-registry"
+repositories: {
+  "incubator": "https://kubernetes-charts-incubator.storage.googleapis.com/"
+}

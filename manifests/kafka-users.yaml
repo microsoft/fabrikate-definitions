@@ -1,0 +1,10 @@
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: schema-registry-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls

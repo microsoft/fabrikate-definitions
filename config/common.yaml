@@ -1,0 +1,44 @@
+config:
+subcomponents:
+  strimzi-kafka-operator:
+    namespace: "kafka"
+    injectNamespace: true
+  confluent-schema-registry:
+    namespace: "kafka"
+    injectNamespace: true
+    config:
+      replicaCount: 3
+      service:
+        labels: {}
+
+      kafkaStore:
+        overrideBootstrapServers: "PLAINTEXT://kcluster-kafka-brokers.kafka:9092"
+
+      kafka:
+        enabled: false
+
+      ingress:
+        enabled: false
+        
+      external:
+        enabled: false
+
+      jmx:
+        enabled: false
+        port: 5555
+
+      prometheus:
+        jmx:
+          enabled: false
+          image: solsson/kafka-prometheus-jmx-exporter@sha256
+          imageTag: 6f82e2b0464f50da8104acd7363fb9b995001ddff77d248379f8788e78946143
+          port: 5556
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+      secrets: []

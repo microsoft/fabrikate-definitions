@@ -1,0 +1,8 @@
+name: "strimzi-kafka-operator"
+type: "helm"
+path: "helm-charts/strimzi-kafka-operator"
+method: "git"
+source: "https://github.com/strimzi/strimzi-kafka-operator/"
+repositories: {
+  "helm-charts": "http://strimzi.io/charts/"
+}
