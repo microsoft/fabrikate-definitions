@@ -22,7 +22,6 @@ if [ -z "$BUFFER_MEMORY" ]; then
   BUFFER_MEMORY=67108864
 fi
 
-kubectl apply -n kafka -f kafka-networkpolicy.yaml
 kubectl apply -n kafka -f kafka-topics.yaml
 kubectl apply -n kafka -f kafka-users.yaml
 kubectl apply -n kafka -f kafka-client.yaml
