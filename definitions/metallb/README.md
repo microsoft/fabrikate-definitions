@@ -18,7 +18,7 @@ subcomponents:
 
 This definition uses Helm for installation and management of MetalLB. Documentation can be found in the [Helm Charts Repo](https://github.com/helm/charts/tree/master/stable/metallb).
 
-It is recommended you change the configuration to suit your own needs. This can be achieved using the `configInLine` stanza in your config.yaml like so:
+It is recommended you change the configuration to suit your own needs. This can be achieved using the `configInLine` stanza in your `common.yaml` like so:
 
 ```yaml
 metallb:
