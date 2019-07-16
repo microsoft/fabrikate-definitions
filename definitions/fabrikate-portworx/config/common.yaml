@@ -1,0 +1,5 @@
+config:
+subcomponents:
+  storageos-operator:
+    namespace: "portworx"
+    injectNamespace: true

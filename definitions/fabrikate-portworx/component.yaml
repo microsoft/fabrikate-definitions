@@ -1,0 +1,10 @@
+name: "portworx-stork"
+generator: static # Deprecated in fabrikate v1.0.0
+type: static # Replaces `generator` in fabrikate v1.0.0
+path: "./manifests"
+subcomponents:
+  - name: "portworx"
+    type: helm
+    source: https://github.com/portworx/helm
+    method: git
+    path: charts/portworx
