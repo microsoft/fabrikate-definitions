@@ -1,4 +1,4 @@
-# MinIO
+# Strimzi Kafka Operator
 
 This [Fabrikate](https://github.com/microsoft/fabrikate) definition generates the Kubernetes resource manifests for [Strimzi Kafka Operator](https://github.com/strimzi/strimzi-kafka-operator).
 
