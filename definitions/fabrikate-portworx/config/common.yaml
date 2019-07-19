@@ -1,5 +1,9 @@
 config:
 subcomponents:
-  storageos-operator:
+  portworx:
     namespace: "portworx"
     injectNamespace: true
+    config:
+      etcdEndPoint: "etcd:http://192.168.70.90:2379"
+      AKSorEKSInstall: true
+      
