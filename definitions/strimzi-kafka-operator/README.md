@@ -8,10 +8,11 @@ Add the following to your component.yaml:
 
 ```yaml
 subcomponents:
-  - name: "kafka"
-    source: "https://github.com/microsoft/fabrikate-definitions.git"
-    path: "definitions/strimzi-kafka-operator"
-    method: "git"
+  - name: "strimzi-kafka-operator"
+    type: "helm"
+    path: "strimzi-kafka-operator"
+    method: "helm"
+    source: "http://strimzi.io/charts/"
 ```
 
 You can apply the operator to watch a specific namespace instead of the default namespace by including the following configuration if your fabrikate config yaml (e.g. common.yaml).
