@@ -6,3 +6,7 @@ subcomponents:
     source: "components/strimzi-kafka-operator"
   - name: "confluent-schema-registry"
     source: "components/confluent-schema-registry"
+  - name: "prometheus-grafana"
+    source: "https://github.com/microsoft/fabrikate-definitions.git"
+    path: "definitions/fabrikate-prometheus-grafana"
+    method: "git"

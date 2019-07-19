@@ -7,3 +7,33 @@ spec:
   podSelector: {}
   policyTypes:
   - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-kafka
+  namespace: kafka
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/name: kcluster-kafka
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-zookeeper
+  namespace: kafka
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/name: kcluster-zookeeper
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus
