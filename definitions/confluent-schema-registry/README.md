@@ -9,9 +9,10 @@ Add the following to your component.yaml:
 ```yaml
 subcomponents:
   - name: "confluent-schema-registry"
-    source: "https://github.com/microsoft/fabrikate-definitions.git"
-    path: "definitions/confluent-schema-registry"
-    method: "git"
+    type: "helm"
+    source: "https://kubernetes-charts-incubator.storage.googleapis.com/"
+    method: "helm"
+    path: "schema-registry"
 ```
 
 You should configure the schema registry following the [helm chart values.yaml](https://github.com/helm/charts/blob/master/incubator/schema-registry/values.yaml). You should specify `kafka.enabled: false` or else the helm chart will deploy a non-production ready Kafka & Zookeeper instance. By setting `kafka.enabled: false`, you will need to pass in the broker location to the schema registry using `kafkaStore.overrideBootstrapServers`.
