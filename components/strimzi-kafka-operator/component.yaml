@@ -1,5 +1,0 @@
-name: "strimzi-kafka-operator"
-type: "helm"
-path: "strimzi-kafka-operator"
-method: "helm"
-source: "http://strimzi.io/charts/"
