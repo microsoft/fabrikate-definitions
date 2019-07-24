@@ -16,7 +16,7 @@ subcomponents:
 
 ### Setting Up Portworx
 
-Extensive documentation exists at the [Helm Charts repo](https://github.com/portworx/helm/tree/master/charts/portworx#configuration). If you are running Portworx on AKS, it is recommended you change the PVC default storage class to managed premium for production workloads:
+Extensive documentation exists at the [Helm Charts repo](https://github.com/portworx/helm/tree/master/charts/portworx#configuration). If you are running Portworx on AKS, set the `AKSorEKSInstall` parameter to true. If you would like to use a custom `etcdEndpoint` provide the URLs separated by semi-colons and disable the `internalKVDB` store, otherwise you may use a builtin `etcdEndpoint` or one that his hosted by Portworx.
 
 ```yaml
 portworx:

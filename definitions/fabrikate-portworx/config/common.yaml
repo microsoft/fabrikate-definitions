@@ -4,6 +4,10 @@ subcomponents:
     namespace: "portworx"
     injectNamespace: true
     config:
-      etcdEndPoint: "etcd:http://192.168.70.90:2379"
+      internalKVDB: true
+      etcdEndPoint: # Set internal KVDB to false if you wish to use a custom etcdEndpoint
       AKSorEKSInstall: true
-      
+      envVars: "API_SERVER=http://lighthouse-new.portworx.com;"
+      secretType: "KVDB"
+
+       
