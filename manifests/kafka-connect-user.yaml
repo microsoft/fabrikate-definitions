@@ -13,11 +13,6 @@ spec:
     acls:
       - resource:
           type: topic
-          name: test
-          patternType: literal
-        operation: All
-      - resource:
-          type: topic
-          name: test-one-rep
+          name: kconnect-mongodb-topic
           patternType: literal
         operation: All
