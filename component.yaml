@@ -16,3 +16,8 @@ subcomponents:
     source: "https://github.com/microsoft/fabrikate-definitions.git"
     path: "definitions/fabrikate-prometheus-grafana"
     method: "git"
+  - name: "portworx"
+    type: helm
+    source: https://github.com/portworx/helm
+    method: git
+    path: charts/portworx

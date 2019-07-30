@@ -356,3 +356,31 @@ subcomponents:
               memory: 128Mi
 
       secrets: []
+  portworx:
+    namespace: "portworx"
+    injectNamespace: true
+    config:
+      internalKVDB: true
+      etcdEndPoint: # Set internal KVDB to false if you wish to use a custom etcdEndpoint
+      AKSorEKSInstall: true
+      envVars: "API_SERVER=http://lighthouse-new.portworx.com;"
+      secretType: "KVDB"
+      env:
+        - name: PX_TEMPLATE_VERSION
+          value: v2
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: AZURE_CLIENT_SECRET
+              name: px-azure
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: AZURE_CLIENT_ID
+              name: px-azure
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: AZURE_TENANT_ID
+              name: px-azure
+
