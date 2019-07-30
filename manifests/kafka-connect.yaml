@@ -9,6 +9,12 @@ spec:
   replicas: 1
   bootstrapServers: kcluster-kafka-bootstrap:9093
   image: edsa14/mongo-kafka-connect:v2
+  authentication:
+    type: tls
+    certificateAndKey: 
+      certificate: user.crt
+      key: user.key
+      secretName: kafka-connect-user
   tls:
     trustedCertificates:
       - secretName: kcluster-cluster-ca-cert
