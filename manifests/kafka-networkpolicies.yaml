@@ -41,7 +41,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-kafka-connect
+  name: allow-prometheus-kafka-connect
   namespace: kafka
 spec:
   podSelector:
@@ -51,4 +51,4 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: kconnect-cluster
+          app: prometheus
