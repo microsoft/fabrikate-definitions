@@ -1,7 +1,7 @@
 apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaUser
 metadata:
-  name: perftest-user
+  name: test-user
   namespace: kafka
   labels:
     strimzi.io/cluster: kcluster
@@ -19,5 +19,10 @@ spec:
       - resource:
           type: topic
           name: test-one-rep
+          patternType: literal
+        operation: All
+      - resource:
+          type: topic
+          name: test-replication
           patternType: literal
         operation: All
