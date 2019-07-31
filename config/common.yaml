@@ -17,7 +17,6 @@ subcomponents:
                   static_configs:
                     - targets:
                       - localhost:9090
-
                 - job_name: 'kubernetes-apiservers'
                   kubernetes_sd_configs:
                     - role: endpoints
@@ -365,7 +364,6 @@ subcomponents:
   #     AKSorEKSInstall: true
   #     envVars: "API_SERVER=http://lighthouse-new.portworx.com;"
   #     secretType: "k8s"
-  #      drives: 
-  #        type: "type=Premium_LRS,size=150"
+  #     drives: "type=Premium_LRS,size=150"
       
 

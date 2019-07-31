@@ -1,4 +1,3 @@
-# SOURCE: https://aks-install.portworx.com/?mc=false&kbver=1.12.7&b=true&s=%22type%3DPremium_LRS%2Csize%3D150%22&j=auto&md=type%3DPremium_LRS%2Csize%3D100&c=px-cluster-6d84f22a-568e-4cd1-ad75-d8ea03443b69&aks=true&stork=true&lh=true&st=k8s
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -573,6 +572,10 @@ spec:
   template:
     metadata:
       creationTimestamp: null
+      annotations:
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9001"
+        prometheus.io/scrape: "true"
       labels:
         app: portworx
         heritage: Tiller
@@ -591,7 +594,10 @@ spec:
               - key: node-role.kubernetes.io/master
                 operator: DoesNotExist
       containers:
-      - args:
+      - ports:
+         - containerPort: 9001
+           name: prom-px-port
+        args:
         - -b
         - -c
         # Needs to be replaced the cluster ID with a uuid every time portworx is deployed to a cluster for trial validation
