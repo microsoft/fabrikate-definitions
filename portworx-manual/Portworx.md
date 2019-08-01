@@ -10,7 +10,7 @@ Portworx includes:
 
 > Currently the helm chart for Portworx is missing support for embedding the Azure service principal environment secrets for the PX-store deployment. Until a fix is provided, use the manual method below to deploy Portworx to your cluster.
 
-## Setting up Portworx **Manually**
+## Setting up Portworx Manually
 
 To configure your Portworx Virtualization layer with Strimzi, use the following steps:
 
@@ -40,7 +40,26 @@ You can use the `pxctl` command Portworx provides to obtain metrics on how the v
 
 > `kubectl get pods -n=kube-system -l name=portworx`
 
-2. Next grab the Portworx volume list which will give details on the provisioned volumes deployed. In this Kafka example we define the size and replica amount of the volumes in our statefulset yaml for Kafka and zookeeper.
+Now you are able to view the provisioned Portworx disks dedicated for each node. 
+
+2. Run `kubectl exec <portworx_pod_name> -n kube-system -- /opt/pwx/bin/pxctl status`
+
+```
+       0:1     /dev/sdi        STORAGE_MEDIUM_MAGNETIC 150 GiB     
+    31 Jul 19 15:32 UTC
+        total                   -                       150 GiB
+Cluster Summary
+        Cluster ID: mycluster-00bede14-da12-4df8-88bf-5f73b3f2577e
+        Cluster UUID: c4b28292-2237-4aed-af19-65f9f9b0e125
+        Scheduler: kubernetes
+        Nodes: 3 node(s) with storage (3 online)
+        IP              ID                                      SchedulerNodeName       StorageNode     Used    Capacity        Status  StorageStatus   Version         Kernel                 OS        10.10.1.35      96ad0f14-5bd5-401b-a99e-b8080e135076    aks-default-37257775-0  Yes             9.6 GiB 150 GiB         Online  Up              2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTS
+        10.10.1.4       7d054b92-c66a-479a-bcd6-2460aac2364c    aks-default-37257775-2  Yes             9.6 GiB 150 GiB         Online  Up              2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTS
+        10.10.1.66      3b7e8f15-4eed-496b-9cd2-01e30a2393d7    aks-default-37257775-1  Yes             9.6 GiB 150 GiB         Online  Up (This node)  2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTSGlobal Storage Pool
+        Total Used      :  29 GiB
+```
+
+3. **Once your storage class definition is applied and you provision PVCs from your application such as Strimzi**, next grab the Portworx volume list which will give details on the provisioned volumes deployed. In this Kafka example we define the size and replica amount of the volumes in our statefulset yaml for Kafka and zookeeper.
 
 > `kubectl exec <portowrx_pod_name> -n kube-system -- /opt/pwx/bin/pxctl volume list`
 
@@ -54,7 +73,7 @@ ID                      NAME                                            SIZE    
 935420839169754560      pvc-c32f46f5-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.4no
 
 ```
-3. Now grab the volume state details for a portworx disk. 
+4. Now grab the volume state details for a portworx disk. 
 
 > `kubectl exec <portworx_pod>-n kube-system -- /opt/pwx/bin/pxctl volume inspect <volume_id>`
 
@@ -92,3 +111,9 @@ Volume  :  924341013124639820
                   Controlled by  : kafka (StatefulSet)
 ```
 For details on how to snapshot volumes using stork check out - https://portworx.com/run-ha-kafka-azure-kubernetes-service/.
+
+## Monitoring Portworx
+
+In the provided Portworx spec file, `px-gen-spec.yaml`, there is an added port opening configuration under the Daemonset section allowing Prometheus to scrape Portworx pods for metrics. In addition, added annotations for promethes to access the metric probes have been embedded for Prometheus integration. Navigate to prometheus and view the `px` metrics.
+
+> Run `kubectl port-forward -n prometheus <prometheus_server_pod> 9090`
