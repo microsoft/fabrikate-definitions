@@ -2,15 +2,15 @@
 
 Portworx provides cloud native storage for applications running in the cloud, on-prem and in hybrid/multi-cloud environments.
 
-PX-Store includes:
+Portworx includes:
 - Container-optimized volumes with elastic scaling for no application downtime
 - High Availability across nodes/racks/AZs so you can failover in seconds
 - Multi-writer shared volumes across multiple containers
 - Storage-aware class-of-service (COS) and application aware I/O tuning
 
-> Currently the helm chart for Portworx is missing support for embedded the Azure service principal environment secrets for the PX-store deployment. Until a fix is provided, use the manual method below to deploy Portworx to your cluster.
+> Currently the helm chart for Portworx is missing support for embedding the Azure service principal environment secrets for the PX-store deployment. Until a fix is provided, use the manual method below to deploy Portworx to your cluster.
 
-## Setting up Portworx **Unstable**
+## Setting up Portworx **Manually**
 
 To configure your Portworx Virtualization layer with Strimzi, use the following steps:
 
@@ -20,20 +20,16 @@ kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENAN
                                                       --from-literal=AZURE_CLIENT_ID=""\
                                                       --from-literal=AZURE_CLIENT_SECRET=""
 
+```
+Normally you would generate custom specs for your portworx config. By default, our spec uses Premium volume types, 150 GB, Auto Data and Management network interfaces with Stork, GUI enabled. Until the portworx generator has been modified to support the appropriate secret types mentioned above, use the `px-gen-spec.yaml` provided. To customize this config use the api URL to download a custom yaml [https://docs.portworx.com/portworx-install-with-kubernetes/cloud/azure/aks/2-deploy-px/#]
 
-# Usually you would Generate custom specs for your portworx config. By default, our spec uses Premium volume types, 150 GB, Auto Data and 
-# Management network interfaces with Stork, GUI enabled. Until the portworx generator has been modified to support the appropriate secret types use the
-# spec.yaml provided. To customize this config use the api URL to download a custom yaml [https://docs.portworx.com/portworx-install-with-kubernetes/cloud/azure/aks/2-deploy-px/#]
-
-kubectl apply -f px-gen-spec.yaml
-
+Run `kubectl apply -f px-gen-spec.yaml`
 
 > If you run into issues with Portworx deployment, run a `curl -fsL https://install.portworx.com/px-wipe | bash` to remove Portworx from the cluster then attempt to reinstall again
 
-# Create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka
-kubectl create -f perftest/kafka-px-ha-sc.yaml
+For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka.
 
-```
+Run `kubectl create -f kafka-px-ha-sc.yaml`
 
 ## How to interact with Portworx
 
@@ -56,11 +52,11 @@ ID                      NAME                                            SIZE    
 924341013124639820      pvc-653a7482-a3fc-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.6no
 283085716488210125      pvc-b3afc5cf-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.5no
 935420839169754560      pvc-c32f46f5-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.4no
-nmrose@MININT-86O9IGE:/mnt/c/Users/naros/Desktop/Microsoft/fy20/portworx/azure-kafka-kubernetes$ kubectl exec portworx-95vrn -n kube-system -- /opt/p
+
 ```
 3. Now grab the volume state details for a portworx disk. 
 
-> kubectl exec <portworx_pod>-n kube-system -- /opt/pwx/bin/pxctl volume inspect <volume_id>
+> `kubectl exec <portworx_pod>-n kube-system -- /opt/pwx/bin/pxctl volume inspect <volume_id>`
 
 ```
 Volume  :  924341013124639820
