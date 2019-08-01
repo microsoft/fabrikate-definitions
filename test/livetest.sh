@@ -4,23 +4,11 @@
 
 # Deploy kafka client to use as producer and consumer
 # TODO: figure out if we can deploy client without topic and users first?
+kubectl create secret generic -n kafka mirror-maker-cluster-ca-cert --from-literal=ca.crt=sample-faked-cert
 kubectl apply -n kafka -f kafka-topics.yaml
 kubectl apply -n kafka -f kafka-users.yaml
 kubectl apply -n kafka -f kafka-client.yaml
-sleep 5s
-
-# Kafka client SSL Components
-setup_kafka_client_ssl () {
-  echo "Setting Up Kafka Client for SSL"
-  for i in $(seq 0 2); do # End Number is replication factor of kafka client - 1
-    kubectl cp ./setup_ssl.sh "kafka/kafkaclient-$i:/opt/kafka/setup_ssl.sh"
-    kubectl exec -n kafka -it "kafkaclient-$i" -- bash setup_ssl.sh
-  done
-}
-
-# TODO: argument or boolean for this
-# Comment following line if you don't want to use ssl.
-# setup_kafka_client_ssl
+sleep 
 
 # Create kafka topic
 UUID=`uuidgen | awk '{print tolower($0)}'`
@@ -51,8 +39,6 @@ kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker
 
 # Consume messages from topic
 MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}-output-messages.txt"
-# TODO: Figure out how to swallow message "Unable to use a TTY - input is not a terminal or the right kind of file"
-# kubectl exec -n kafka -ti kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning 2>&1 | tee $MESSAGE_OUTPUT_FILE.txt
 kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
 
 # TODO: verify this also kills the process on kafka client. We cannot remove the topic until the consumer is gone.
@@ -67,6 +53,7 @@ kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics
 kubectl delete -n kafka -f kafka-topics.yaml
 kubectl delete -n kafka -f kafka-users.yaml
 kubectl delete -n kafka -f kafka-client.yaml
+kubectl delete secret -n kafka mirror-maker-cluster-ca-cert
 
 sleep 60
 
