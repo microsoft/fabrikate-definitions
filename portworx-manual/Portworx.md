@@ -1,4 +1,4 @@
-# Using Virtualized Storage with Portworx
+# Using a Virtualized Storage: Portworx
 
 Portworx provides cloud native storage for applications running in the cloud, on-prem and in hybrid/multi-cloud environments.
 
@@ -114,6 +114,46 @@ For details on how to snapshot volumes using stork check out - https://portworx.
 
 ## Monitoring Portworx
 
-In the provided Portworx spec file, `px-gen-spec.yaml`, there is an added port opening configuration under the Daemonset section allowing Prometheus to scrape Portworx pods for metrics. In addition, added annotations for promethes to access the metric probes have been embedded for Prometheus integration. Navigate to prometheus and view the `px` metrics.
+In the provided Portworx spec file, `px-gen-spec.yaml`, there is an added port opening configuration under the daemonset section allowing Prometheus to scrape Portworx pods for metrics. In addition, added annotations for Prometheus to access the metric probes have been embedded for Prometheus integration. Navigate to prometheus and view the `px` metrics.
 
 > Run `kubectl port-forward -n prometheus <prometheus_server_pod> 9090`
+
+## High Availability & Snapshots with Portworx
+
+High Availability and Disaster Recovery are built into Portworx out of the box. Here are some tips and 
+
+### Portworx Failovers
+
+You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. When the new Pod is created it has the same data as the original Pod.
+
+``` sh
+$ NODE=`kubectl get pods -o wide -n kafka | grep my-cluster-kafka-0 | awk '{print $7}'`
+$ kubectl cordon ${NODE}
+```
+
+Kubernetes controller now tries to create the Pod on a different node. Wait for the Kafka Pod to be in Running state on the node.
+
+```
+kubectl get pods -l app=kafka -o wide
+NAME      READY   STATUS    RESTARTS   AGE   IP            NODE                       NOMINATED NODE
+kafka-0   1/1     Running   0          1m    10.244.1.14   aks-agentpool-23019497-0   
+```
+Don’t forget to uncordon the node before proceeding further.
+```
+$ kubectl uncordon ${NODE}
+node/aks-agentpool-23019497-2 uncordoned
+```
+Then verify that the messages are still available under the test topic
+
+```
+$ kubectl exec -it kafka-cli bash
+# ./bin/kafka-console-consumer.sh --bootstrap-server kafka-broker:9092 --topic test --partition 0 --from-beginning
+message 1
+message 2
+message 3
+Processed a total of 3 messages
+```
+
+### Backing up and restoring a Kafka node through snapshots
+
+Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots.
