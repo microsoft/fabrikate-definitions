@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zoo-entrance
+  namespace: kafka
+  labels:
+    app: zoo-entrance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zoo-entrance
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: zoo-entrance
+    spec:
+      containers:
+        - name: tls-sidecar
+          image: 'docker.io/scholzj/zoo-entrance-stunnel:latest'
+          ports:
+            - containerPort: 2181
+              name: zoo
+              protocol: TCP
+          env:
+            - name: TLS_SIDECAR_LOG_LEVEL
+              value: notice
+            - name: STRIMZI_ZOOKEEPER_CONNECT
+              value: 'kcluster-zookeeper-client:2181'
+          imagePullPolicy: Always
+          livenessProbe:
+            exec:
+              command:
+                - /opt/stunnel/stunnel_healthcheck.sh
+                - '2181'
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - /opt/stunnel/stunnel_healthcheck.sh
+                - '2181'
+            failureThreshold: 3
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            - mountPath: /etc/tls-sidecar/eo-certs/
+              name: eo-certs
+            - mountPath: /etc/tls-sidecar/cluster-ca-certs/
+              name: cluster-ca-certs
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: eo-certs
+          secret:
+            defaultMode: 288
+            secretName: kcluster-entity-operator-certs
+        - name: cluster-ca-certs
+          secret:
+            defaultMode: 288
+            secretName: kcluster-cluster-ca-cert
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kafka
+  labels:
+    app: zoo-entrance
+  name: zoo-entrance
+spec:
+  ports:
+    - name: zoo
+      port: 2181
+      protocol: TCP
+      targetPort: 2181
+  selector:
+    app: zoo-entrance
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  namespace: kafka
+  labels:
+    app: zoo-entrance
+  name: zoo-entrance
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: zoo-entrance
+    ports:
+    - port: 2181
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      strimzi.io/name: kcluster-zookeeper
+  policyTypes:
+  - Ingress
