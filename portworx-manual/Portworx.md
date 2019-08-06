@@ -40,23 +40,40 @@ You can use the `pxctl` command Portworx provides to obtain metrics on how the v
 
 > `kubectl get pods -n=kube-system -l name=portworx`
 
-Now you are able to view the provisioned Portworx disks dedicated for each node. 
+2. Now you are able to view the provisioned Portworx disks dedicated for each node. 
 
-2. Run `kubectl exec <portworx_pod_name> -n kube-system -- /opt/pwx/bin/pxctl status`
+> `kubectl exec <portworx_pod_name> -n kube-system -- /opt/pwx/bin/pxctl status`
 
 ```
-       0:1     /dev/sdi        STORAGE_MEDIUM_MAGNETIC 150 GiB     
-    31 Jul 19 15:32 UTC
-        total                   -                       150 GiB
+Status: PX is operational
+License: Trial (expires in 31 days)
+Node ID: ce4d4aca-fb23-4ac0-ad36-16fa627f1460
+        IP: 10.240.0.6 
+        Local Storage Pool: 1 pool
+        POOL    IO_PRIORITY     RAID_LEVEL      USABLE  USED    STATUS  ZONE    REGION
+        0       LOW             raid0           147 GiB 9.8 GiB Online  0       westus2
+        Local Storage Devices: 1 device
+        Device  Path            Media Type              Size            Last-Scan
+        0:1     /dev/sdc2       STORAGE_MEDIUM_MAGNETIC 147 GiB         05 Aug 19 19:02 UTC
+        total                   -                       147 GiB
+        Cache Devices:
+        No cache devices
+        Journal Device:
+        1       /dev/sdc1       STORAGE_MEDIUM_MAGNETIC
+        Metadata Device:
+        1       /dev/sdd        STORAGE_MEDIUM_MAGNETIC
 Cluster Summary
-        Cluster ID: mycluster-00bede14-da12-4df8-88bf-5f73b3f2577e
-        Cluster UUID: c4b28292-2237-4aed-af19-65f9f9b0e125
+        Cluster ID: px-cluster-4148c550-39b2-4954-8a15-fa0cfe584dd8
+        Cluster UUID: 0ee425cf-2131-4a84-b734-152274cd9481
         Scheduler: kubernetes
         Nodes: 3 node(s) with storage (3 online)
-        IP              ID                                      SchedulerNodeName       StorageNode     Used    Capacity        Status  StorageStatus   Version         Kernel                 OS        10.10.1.35      96ad0f14-5bd5-401b-a99e-b8080e135076    aks-default-37257775-0  Yes             9.6 GiB 150 GiB         Online  Up              2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTS
-        10.10.1.4       7d054b92-c66a-479a-bcd6-2460aac2364c    aks-default-37257775-2  Yes             9.6 GiB 150 GiB         Online  Up              2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTS
-        10.10.1.66      3b7e8f15-4eed-496b-9cd2-01e30a2393d7    aks-default-37257775-1  Yes             9.6 GiB 150 GiB         Online  Up (This node)  2.1.2.0-21409c7 4.15.0-1050-azure      Ubuntu 16.04.6 LTSGlobal Storage Pool
+        IP              ID                                      SchedulerNodeName               StorageNode     Used    Capacity        Status  StorageStatus   Version         Kernel                  OS
+        10.240.0.6      ce4d4aca-fb23-4ac0-ad36-16fa627f1460    aks-nodepool1-40021484-0        Yes             9.8 GiB 147 GiB         Online  Up (This node)  2.1.1.0-6de97a6 4.15.0-1050-azure       Ubuntu 16.04.6 LTS
+        10.240.0.5      1628bbf7-8780-4d52-9a5b-879f0da3fb14    aks-nodepool1-40021484-1        Yes             9.8 GiB 147 GiB         Online  Up              2.1.1.0-6de97a6 4.15.0-1050-azure       Ubuntu 16.04.6 LTS
+        10.240.0.4      001c6978-7ec9-4c79-b5ca-224c3263738a    aks-nodepool1-40021484-2        Yes             9.8 GiB 147 GiB         Online  Up              2.1.1.0-6de97a6 4.15.0-1050-azure       Ubuntu 16.04.6 LTS
+Global Storage Pool
         Total Used      :  29 GiB
+        Total Capacity  :  441 GiB
 ```
 
 3. **Once your storage class definition is applied and you provision PVCs from your application such as Strimzi**, next grab the Portworx volume list which will give details on the provisioned volumes deployed. In this Kafka example we define the size and replica amount of the volumes in our statefulset yaml for Kafka and zookeeper.
@@ -110,7 +127,6 @@ Volume  :  924341013124639820
                   Running on     : aks-nodepool1-13284751-1
                   Controlled by  : kafka (StatefulSet)
 ```
-For details on how to snapshot volumes using stork check out - https://portworx.com/run-ha-kafka-azure-kubernetes-service/.
 
 ## Monitoring Portworx
 
@@ -124,19 +140,32 @@ High Availability and Disaster Recovery are built into Portworx out of the box. 
 
 ### Portworx Failovers
 
-You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. When the new Pod is created it has the same data as the original Pod.
+You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. To start, run the `livetest.sh`. When the new Pod is created it has the same data as the original Pod.
 
 ``` sh
 $ NODE=`kubectl get pods -o wide -n kafka | grep my-cluster-kafka-0 | awk '{print $7}'`
 $ kubectl cordon ${NODE}
 ```
 
+Now Delete a pod.
+> `kubectl delete -n kafka pod my-cluster-kafka-0`
+
 Kubernetes controller now tries to create the Pod on a different node. Wait for the Kafka Pod to be in Running state on the node.
 
-```
-kubectl get pods -l app=kafka -o wide
-NAME      READY   STATUS    RESTARTS   AGE   IP            NODE                       NOMINATED NODE
-kafka-0   1/1     Running   0          1m    10.244.1.14   aks-agentpool-23019497-0   
+``` bash
+$ kubectl get pods -n kafka  -o wide
+NAME                                          READY   STATUS    RESTARTS   AGE    IP            NODE                       NOMINATED NODE
+kafkaclient-0                                 1/1     Running   0          111m   10.244.1.5    aks-nodepool1-40021484-2   <none>
+kafkaclient-1                                 1/1     Running   0          51m    10.244.2.10   aks-nodepool1-40021484-1   <none>
+kafkaclient-2                                 1/1     Running   0          50m    10.244.0.13   aks-nodepool1-40021484-0   <none>
+my-cluster-entity-operator-5787f8d64d-jnm2k   3/3     Running   0          51m    10.244.2.9    aks-nodepool1-40021484-1   <none>
+my-cluster-kafka-0                            2/2     Running   0          52m    10.244.1.7    aks-nodepool1-40021484-1   <none>
+my-cluster-kafka-1                            2/2     Running   0          52m    10.244.2.8    aks-nodepool1-40021484-1   <none>
+my-cluster-kafka-2                            2/2     Running   0          52m    10.244.0.12   aks-nodepool1-40021484-0   <none>
+my-cluster-zookeeper-0                        2/2     Running   0          53m    10.244.0.11   aks-nodepool1-40021484-0   <none>
+my-cluster-zookeeper-1                        2/2     Running   0          53m    10.244.2.7    aks-nodepool1-40021484-1   <none>
+my-cluster-zookeeper-2                        2/2     Running   0          53m    10.244.1.6    aks-nodepool1-40021484-2   <none>
+strimzi-cluster-operator-68575878f6-th28x     1/1     Running   0          55m    10.244.2.6    aks-nodepool1-40021484-1   <none>  
 ```
 Don’t forget to uncordon the node before proceeding further.
 ```
@@ -146,8 +175,8 @@ node/aks-agentpool-23019497-2 uncordoned
 Then verify that the messages are still available under the test topic
 
 ```
-$ kubectl exec -it kafka-cli bash
-# ./bin/kafka-console-consumer.sh --bootstrap-server kafka-broker:9092 --topic test --partition 0 --from-beginning
+$ kubectl exec -it -n kafka kafkaclient-0 bash
+# ./bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-brokers:9092 --topic test --partition 0 --from-beginning
 message 1
 message 2
 message 3
@@ -157,3 +186,6 @@ Processed a total of 3 messages
 ### Backing up and restoring a Kafka node through snapshots
 
 Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots.
+
+
+For more details on how to snapshot volumes using stork check out [here](hhttps://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-annotations/#managing-snapshots-through-kubectl). 
