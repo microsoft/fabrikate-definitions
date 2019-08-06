@@ -2,8 +2,8 @@
 
 # TODO: Env vars for argument and configured values for the Kafka Cluster
 
-# Deploy kafka client to use as producer and consumer
-# TODO: figure out if we can deploy client without topic and users first?
+# Deploy kafka client to use as producer and consumer. Topic and Users are required for the Client.
+# Client also expects a secret for mirror-maker-cluster-ca-cert. Inserting a dummy string as the cert.
 kubectl create secret generic -n kafka mirror-maker-cluster-ca-cert --from-literal=ca.crt=sample-faked-cert
 kubectl apply -n kafka -f kafka-topics.yaml
 kubectl apply -n kafka -f kafka-users.yaml
@@ -55,6 +55,7 @@ kubectl delete -n kafka -f kafka-users.yaml
 kubectl delete -n kafka -f kafka-client.yaml
 kubectl delete secret -n kafka mirror-maker-cluster-ca-cert
 
+# Waiting for kafka client to be deleted. This allows the test topic to be deleted.
 sleep 60
 
 # Delete test topic
