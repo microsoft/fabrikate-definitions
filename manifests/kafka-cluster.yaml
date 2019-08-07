@@ -8,6 +8,9 @@ spec:
     version: 2.2.1
     replicas: 3
     listeners:
+      external:
+        type: loadbalancer
+        tls: false # by default true
       plain:
         networkPolicyPeers:
         - podSelector:
