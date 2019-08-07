@@ -12,7 +12,7 @@ Portworx includes:
 
 ## Setting up Portworx Manually
 
-To configure your Portworx Virtualization layer with Strimzi, use the following steps or run the [`strimzi-px-install.sg`](strimzi-px-install.sh) script.:
+To configure your Portworx Virtualization layer with Strimzi, use the following steps or run the [`strimzi-px-install.sh`](strimzi-px-install.sh) script.:
 
 ```
 # Create a secret to give Portworx access to Azure APIs
