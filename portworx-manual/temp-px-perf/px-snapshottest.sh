@@ -14,10 +14,10 @@ kubectl get volumesnapshotdatas # Not working
 
 echo "Deleting kafka broker stateful set and PVC"
 
-kubectl delete -n kafka sts/my-cluster-kafka
-kubectl delete -n kafka pvc/data-my-cluster-kafka-0
-kubectl delete -n kafka pvc/data-my-cluster-kafka-1
-kubectl delete -n kafka pvc/data-my-cluster-kafka-2
+kubectl delete -n kafka sts/px-cluster-kafka
+kubectl delete -n kafka pvc/data-px-cluster-kafka-0
+kubectl delete -n kafka pvc/data-px-cluster-kafka-1
+kubectl delete -n kafka pvc/data-px-cluster-kafka-2
 kubectl get sts -n kafka
 kubectl get po -n kafka
 kubectl get pvc -n kafka
@@ -36,7 +36,7 @@ echo "Checking pod successfully available and prior messages are persisted"
 # Check if messages from topic are still persisted on switched node.
 MESSAGE_OUTPUT_FILE_SNAPSHOT="./temp/${TESTING_TOPIC}-snapshot-output-messages.txt"
 echo "Kafka broker messages after snapshot are written at: " ${MESSAGE_SNAPSHOT_FILE_CORDON}
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
 CONSUMER_PID=$!
 sleep 10
 kill $CONSUMER_PID

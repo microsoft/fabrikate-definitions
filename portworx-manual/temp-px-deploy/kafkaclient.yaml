@@ -24,7 +24,7 @@ spec:
         - name: CA_CRT
           valueFrom:
             secretKeyRef:
-              name: my-cluster-cluster-ca-cert
+              name: px-cluster-cluster-ca-cert
               key: ca.crt
         - name: USER_CRT
           valueFrom:

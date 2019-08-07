@@ -12,7 +12,7 @@ Portworx includes:
 
 ## Setting up Portworx Manually
 
-To configure your Portworx Virtualization layer with Strimzi, use the following steps:
+To configure your Portworx Virtualization layer with Strimzi, use the following steps or run the [`strimzi-px-install.sg`](strimzi-px-install.sh) script.:
 
 ```
 # Create a secret to give Portworx access to Azure APIs
@@ -21,15 +21,15 @@ kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENAN
                                                       --from-literal=AZURE_CLIENT_SECRET=""
 
 ```
-Normally you would generate custom specs for your portworx config. By default, our spec uses Premium volume types, 150 GB, Auto Data and Management network interfaces with Stork, GUI enabled. Until the portworx generator has been modified to support the appropriate secret types mentioned above, use the `px-gen-spec.yaml` provided. To customize this config use the api URL to download a custom yaml [https://docs.portworx.com/portworx-install-with-kubernetes/cloud/azure/aks/2-deploy-px/#]
+Typically you would generate custom specs for your portworx config. By default, our spec uses Premium volume types, 150 GB, Auto Data and Management network interfaces with Stork, GUI enabled. Until the portworx generator has been modified to support the appropriate secret types mentioned above, use the `px-gen-spec.yaml` provided. To customize this config use the api URL to download a custom yaml [https://docs.portworx.com/portworx-install-with-kubernetes/cloud/azure/aks/2-deploy-px/#]
 
-Run `kubectl apply -f px-gen-spec.yaml`
+> `kubectl apply -f temp-px-deploy/px-gen-spec.yaml`
 
-> If you run into issues with Portworx deployment, run a `curl -fsL https://install.portworx.com/px-wipe | bash` to remove Portworx from the cluster then attempt to reinstall again
+* If you run into issues with Portworx deployment, run a `curl -fsL https://install.portworx.com/px-wipe | bash` to remove Portworx from the cluster then attempt to reinstall again. (Typically takes 1-5 minutes)
 
 For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka.
 
-Run `kubectl create -f kafka-px-ha-sc.yaml`
+> `kubectl create -f temp-px-deploy/kafka-px-ha-sc.yaml`
 
 ## How to interact with Portworx
 
@@ -140,15 +140,15 @@ High Availability and Disaster Recovery are built into Portworx out of the box. 
 
 ### Portworx Failovers
 
-You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. To start, run the `livetest.sh`. When the new Pod is created it has the same data as the original Pod.
+You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. To start, follow the steps belor or run the [`px-failovertest.sh`](temp-px-perf/px-failovertest.sh). When the new pod is created it has the same data as the original Pod.
 
 ``` sh
-$ NODE=`kubectl get pods -o wide -n kafka | grep my-cluster-kafka-0 | awk '{print $7}'`
+$ NODE=`kubectl get pods -o wide -n kafka | grep px-cluster-kafka-0 | awk '{print $7}'`
 $ kubectl cordon ${NODE}
 ```
 
 Now Delete a pod.
-> `kubectl delete -n kafka pod my-cluster-kafka-0`
+> `kubectl delete -n kafka pod px-cluster-kafka-0`
 
 Kubernetes controller now tries to create the Pod on a different node. Wait for the Kafka Pod to be in Running state on the node.
 
@@ -158,13 +158,13 @@ NAME                                          READY   STATUS    RESTARTS   AGE  
 kafkaclient-0                                 1/1     Running   0          111m   10.244.1.5    aks-nodepool1-40021484-2   <none>
 kafkaclient-1                                 1/1     Running   0          51m    10.244.2.10   aks-nodepool1-40021484-1   <none>
 kafkaclient-2                                 1/1     Running   0          50m    10.244.0.13   aks-nodepool1-40021484-0   <none>
-my-cluster-entity-operator-5787f8d64d-jnm2k   3/3     Running   0          51m    10.244.2.9    aks-nodepool1-40021484-1   <none>
-my-cluster-kafka-0                            2/2     Running   0          52m    10.244.1.7    aks-nodepool1-40021484-1   <none>
-my-cluster-kafka-1                            2/2     Running   0          52m    10.244.2.8    aks-nodepool1-40021484-1   <none>
-my-cluster-kafka-2                            2/2     Running   0          52m    10.244.0.12   aks-nodepool1-40021484-0   <none>
-my-cluster-zookeeper-0                        2/2     Running   0          53m    10.244.0.11   aks-nodepool1-40021484-0   <none>
-my-cluster-zookeeper-1                        2/2     Running   0          53m    10.244.2.7    aks-nodepool1-40021484-1   <none>
-my-cluster-zookeeper-2                        2/2     Running   0          53m    10.244.1.6    aks-nodepool1-40021484-2   <none>
+px-cluster-entity-operator-5787f8d64d-jnm2k   3/3     Running   0          51m    10.244.2.9    aks-nodepool1-40021484-1   <none>
+px-cluster-kafka-0                            2/2     Running   0          52m    10.244.1.7    aks-nodepool1-40021484-1   <none>
+px-cluster-kafka-1                            2/2     Running   0          52m    10.244.2.8    aks-nodepool1-40021484-1   <none>
+px-cluster-kafka-2                            2/2     Running   0          52m    10.244.0.12   aks-nodepool1-40021484-0   <none>
+px-cluster-zookeeper-0                        2/2     Running   0          53m    10.244.0.11   aks-nodepool1-40021484-0   <none>
+px-cluster-zookeeper-1                        2/2     Running   0          53m    10.244.2.7    aks-nodepool1-40021484-1   <none>
+px-cluster-zookeeper-2                        2/2     Running   0          53m    10.244.1.6    aks-nodepool1-40021484-2   <none>
 strimzi-cluster-operator-68575878f6-th28x     1/1     Running   0          55m    10.244.2.6    aks-nodepool1-40021484-1   <none>  
 ```
 Don’t forget to uncordon the node before proceeding further.
@@ -176,7 +176,7 @@ Then verify that the messages are still available under the test topic
 
 ```
 $ kubectl exec -it -n kafka kafkaclient-0 bash
-# ./bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-brokers:9092 --topic test --partition 0 --from-beginning
+# ./bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-brokers:9092 --topic test --partition 0 --from-beginning
 message 1
 message 2
 message 3
@@ -185,7 +185,7 @@ Processed a total of 3 messages
 
 ### Backing up and restoring a Kafka node through snapshots
 
-Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots.
+Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots. To test portworx for backup scenarios run the [`px-snapshottest.sh`](temp-px-perf/px-snapshottest.sh).
 
 
 For more details on how to snapshot volumes using stork check out [here](hhttps://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-annotations/#managing-snapshots-through-kubectl). 

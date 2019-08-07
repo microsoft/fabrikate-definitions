@@ -4,4 +4,4 @@ metadata:
   name: px-kafka-snapshot
   namespace: kafka
 spec:
-  persistentVolumeClaimName: data-my-cluster-kafka-0
+  persistentVolumeClaimName: data-px-cluster-kafka-0

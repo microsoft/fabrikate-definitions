@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-my-cluster-kafka-0
+  name: data-px-cluster-kafka-0
   annotations:
     snapshot.alpha.kubernetes.io/snapshot: px-kafka-snapshot
 spec:
