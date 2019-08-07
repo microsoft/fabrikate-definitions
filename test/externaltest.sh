@@ -1,13 +1,15 @@
 #! /usr/bin/env bash
 
-# TODO: Env vars for argument and configured values for the Kafka Cluster
+# TODO: Pass by argument
+# Get Broker LoadBalancer Address
+BROKER_LB_IP=`kubectl get svc -n kafka kcluster-kafka-0 --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+echo $BROKER_LB_IP
 
-# Deploy kafka client to use as producer and consumer. Topic and Users are required for the Client.
-# Client also expects a secret for mirror-maker-cluster-ca-cert. Inserting a dummy string as the cert.
-kubectl create secret generic -n kafka mirror-maker-cluster-ca-cert --from-literal=ca.crt=sample-faked-cert
-kubectl apply -n kafka -f kafka-topics.yaml
-kubectl apply -n kafka -f kafka-users.yaml
-kubectl apply -n kafka -f kafka-client.yaml
+BROKER_LB_PORT=`kubectl get svc -n kafka kcluster-kafka-0 --output jsonpath='{.spec.ports[0].port}'`
+echo $BROKER_LB_PORT
+
+BROKER_EXTERNAL_ADDRESS="${BROKER_LB_IP}:${BROKER_LB_PORT}"
+echo "Kafka Broker Address: ${BROKER_EXTERNAL_ADDRESS}"
 
 # Create kafka topic
 UUID=`uuidgen | awk '{print tolower($0)}'`
@@ -33,12 +35,12 @@ done
 
 cat $MESSAGE_INPUT_FILE
 
-# Create messages via console producer
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker-list kcluster-kafka-brokers:9092 --topic $TESTING_TOPIC < $MESSAGE_INPUT_FILE
+# Produce messages through Kafkacat - connecting through external LoadBalancer IP
+cat $MESSAGE_INPUT_FILE | kafkacat -P -b $BROKER_EXTERNAL_ADDRESS -t $TESTING_TOPIC
 
-# Consume messages from topic
+# Consume messages through Kafkacat - connecting through external LoadBalancer IP
 MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}-output-messages.txt"
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
+kafkacat -C -b $BROKER_EXTERNAL_ADDRESS -t $TESTING_TOPIC > $MESSAGE_OUTPUT_FILE &
 
 # TODO: verify this also kills the process on kafka client. We cannot remove the topic until the consumer is gone.
 CONSUMER_PID=$!
@@ -48,15 +50,6 @@ kill $CONSUMER_PID
 echo "listing topics"
 kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --list --zookeeper localhost:2181
 
-# Remove client
-kubectl delete -n kafka -f kafka-topics.yaml
-kubectl delete -n kafka -f kafka-users.yaml
-kubectl delete -n kafka -f kafka-client.yaml
-kubectl delete secret -n kafka mirror-maker-cluster-ca-cert
-
-# Waiting for kafka client to be deleted. This allows the test topic to be deleted.
-sleep 60
-
 # Delete test topic
 echo "deleting test topic"
 echo "kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic ${TESTING_TOPIC}"
@@ -65,6 +58,7 @@ kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics
 echo "listing topics after deletion"
 kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --list --zookeeper localhost:2181
 
+# TODO: Compare what was produced and what was consumed.
 # Compare contents of input and output
 SORTED_INPUT="./temp/sorted-input.txt"
 SORTED_OUTPUT="./temp/sorted-output.txt"
