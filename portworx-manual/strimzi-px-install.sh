@@ -12,9 +12,9 @@ kubectl create namespace kafka
 echo "Installing Portworx"
 
 # Create a secret to give Portworx access to Azure APIs
-kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENANT_ID="" \
-                                                      --from-literal=AZURE_CLIENT_ID=""\
-                                                      --from-literal=AZURE_CLIENT_SECRET=""
+kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENANT_ID="${AZURE_TENANT_ID}" \
+                                                      --from-literal=AZURE_CLIENT_ID="${AZURE_CLIENT_ID}"\
+                                                      --from-literal=AZURE_CLIENT_SECRET="${AZURE_CLIENT_SECRET}"
 
 
 # Generate custom specs for your portworx config. By default, the script uses Premium volume types, 150 GB, Auto Data and 
