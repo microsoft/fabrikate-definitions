@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # TODO: Env vars for argument and configured values for the Kafka Cluster
 
 # Deploy kafka client to use as producer and consumer. Topic and Users are required for the Client.
@@ -14,7 +19,7 @@ UUID=`uuidgen | awk '{print tolower($0)}'`
 echo $UUID
 
 TESTING_TOPIC="topic-${UUID}"
-echo "Test Topic: ${TESTING_TOPIC}"
+echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 
 # TODO: Deploy via CRD with kafka-topics.yaml
 # Deploy via kafka broker pod - Alternatively this can be done through the CRD.
@@ -74,9 +79,9 @@ sort $MESSAGE_OUTPUT_FILE > $SORTED_OUTPUT
 DIFF=`diff ${SORTED_INPUT} ${SORTED_OUTPUT}`
 if [ "$DIFF" != "" ] 
 then
-    echo "Test Failed!!! - There's a difference between input and output!!!"
+    echo "${RED}Test Failed!!! - There's a difference between input and output!!!${NC}"
     exit 1
 fi
 
-echo "Test Passed!!! - All input messages are in the output!"
+echo "${GREEN}Test Passed!!! - All input messages are in the output!${NC}"
 exit 0

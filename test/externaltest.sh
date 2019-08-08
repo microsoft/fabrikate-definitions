@@ -1,22 +1,27 @@
 #! /usr/bin/env bash
 
+YELLOW='\033[1;33m'
+RED='\033[1;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 # TODO: Pass by argument
 # Get Broker LoadBalancer Address
-BROKER_LB_IP=`kubectl get svc -n kafka kcluster-kafka-0 --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+BROKER_LB_IP=`kubectl get svc -n kafka kcluster-kafka-external-bootstrap --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 echo $BROKER_LB_IP
 
-BROKER_LB_PORT=`kubectl get svc -n kafka kcluster-kafka-0 --output jsonpath='{.spec.ports[0].port}'`
+BROKER_LB_PORT=`kubectl get svc -n kafka kcluster-kafka-external-bootstrap --output jsonpath='{.spec.ports[0].port}'`
 echo $BROKER_LB_PORT
 
 BROKER_EXTERNAL_ADDRESS="${BROKER_LB_IP}:${BROKER_LB_PORT}"
-echo "Kafka Broker Address: ${BROKER_EXTERNAL_ADDRESS}"
+echo "${YELLOW}Kafka External Address: ${BROKER_EXTERNAL_ADDRESS}${NC}"
 
 # Create kafka topic
 UUID=`uuidgen | awk '{print tolower($0)}'`
 echo $UUID
 
 TESTING_TOPIC="topic-${UUID}"
-echo "Test Topic: ${TESTING_TOPIC}"
+echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 
 # TODO: Deploy via CRD with kafka-topics.yaml
 # Deploy via kafka broker pod - Alternatively this can be done through the CRD.
@@ -68,9 +73,9 @@ sort $MESSAGE_OUTPUT_FILE > $SORTED_OUTPUT
 DIFF=`diff ${SORTED_INPUT} ${SORTED_OUTPUT}`
 if [ "$DIFF" != "" ] 
 then
-    echo "Test Failed!!! - There's a difference between input and output!!!"
+    echo "${RED}Test Failed!!! - There's a difference between input and output!!!${NC}"
     exit 1
 fi
 
-echo "Test Passed!!! - All input messages are in the output!"
+echo "${GREEN}Test Passed!!! - All input messages are in the output!${NC}"
 exit 0
