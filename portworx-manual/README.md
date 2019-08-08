@@ -134,13 +134,14 @@ In the provided Portworx spec file, `px-gen-spec.yaml`, there is an added port o
 
 > Run `kubectl port-forward -n prometheus <prometheus_server_pod> 9090`
 
+![Portworx_Prometheus](content/px_prometheus_display.png)
 ## High Availability & Snapshots with Portworx
 
 High Availability and Disaster Recovery are built into Portworx out of the box. Here are some tips and 
 
 ### Portworx Failovers
 
-You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. To start, follow the steps belor or run the [`px-failovertest.sh`](temp-px-perf/px-failovertest.sh). When the new pod is created it has the same data as the original Pod.
+You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. `Cordon` prevents any nwly added pods from being scheduled onto the kubernetes cluster. To start, follow the steps below or run the [`px-failovertest.sh`](temp-px-perf/px-failovertest.sh). When the new pod is created it has the same data as the original Pod.
 
 ``` sh
 $ NODE=`kubectl get pods -o wide -n kafka | grep px-cluster-kafka-0 | awk '{print $7}'`

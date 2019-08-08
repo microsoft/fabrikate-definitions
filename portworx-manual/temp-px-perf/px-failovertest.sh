@@ -29,11 +29,11 @@ done
 cat $MESSAGE_INPUT_FILE
 
 # Create messages via console producer
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker-list px-cluster-kafka-brokers:9092 --topic $TESTING_TOPIC < $MESSAGE_INPUT_FILE
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker-list px-cluster-kafka-brokers:9094 --topic $TESTING_TOPIC < $MESSAGE_INPUT_FILE
 
 # Consume messages from topic
 MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}-output-messages.txt"
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-bootstrap:9091 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
 
 CONSUMER_PID=$!
 sleep 10
@@ -59,7 +59,7 @@ kubectl get pods -n kafka  -o wide
 # Check if messages from topic are still persisted on switched node.
 MESSAGE_OUTPUT_FILE_CORDON="./temp/${TESTING_TOPIC}-cordon-output-messages.txt"
 echo "Kafka broker messages after cordon are written at: " ${MESSAGE_OUTPUT_FILE_CORDON}
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server px-cluster-kafka-bootstrap:9091 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
 CONSUMER_PID=$!
 sleep 10
 kill $CONSUMER_PID

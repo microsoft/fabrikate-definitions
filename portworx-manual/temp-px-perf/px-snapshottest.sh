@@ -10,7 +10,7 @@ echo "Verifying volume snapshot creation"
 
 kubectl get volumesnapshot
 
-kubectl get volumesnapshotdatas # Not working
+# kubectl get volumesnapshotdatas # Not working
 
 echo "Deleting kafka broker stateful set and PVC"
 

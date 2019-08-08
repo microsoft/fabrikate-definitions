@@ -1,8 +1,9 @@
 #! /usr/bin/env bash
 
-export AZURE_TENANT_ID=""
 export AZURE_CLIENT_ID=""
 export AZURE_CLIENT_SECRET=""
+export AZURE_TENANT_ID=""
+
 
 echo "Creating namespace kafka"
 kubectl create namespace kafka
@@ -22,9 +23,11 @@ kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENAN
 
 kubectl apply -f temp-px-deploy/px-gen-spec.yaml
 
+# Check to verify the Portworx Daemonset is successfully running
+
 until kubectl get pods --all-namespaces | grep -E "kube-system(\s){3}portworx.*1\/1\s*Running+"
 do
-  sleep ${wait}
+  sleep 10
 done
 
 # Create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka
