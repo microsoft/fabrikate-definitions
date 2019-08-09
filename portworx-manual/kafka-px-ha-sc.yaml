@@ -1,0 +1,19 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: portworx-sc-rep3
+provisioner: kubernetes.io/portworx-volume
+parameters:
+  repl: "3"
+  io_priority: "high"
+  group: "kafka_vg"
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: portworx-sc
+provisioner: kubernetes.io/portworx-volume
+parameters:
+  repl: "3"
+  io_priority: "high"
+  group: "zk_vg"

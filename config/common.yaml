@@ -17,7 +17,6 @@ subcomponents:
                   static_configs:
                     - targets:
                       - localhost:9090
-
                 - job_name: 'kubernetes-apiservers'
                   kubernetes_sd_configs:
                     - role: endpoints
@@ -356,3 +355,15 @@ subcomponents:
               memory: 128Mi
 
       secrets: []
+  # portworx:
+  #   namespace: "portworx"
+  #   injectNamespace: true
+  #   config:
+  #     internalKVDB: true
+  #     etcdEndPoint: # Set internal KVDB to false if you wish to use a custom etcdEndpoint
+  #     AKSorEKSInstall: true
+  #     envVars: "API_SERVER=http://lighthouse-new.portworx.com;"
+  #     secretType: "k8s"
+  #     drives: "type=Premium_LRS,size=150"
+      
+
