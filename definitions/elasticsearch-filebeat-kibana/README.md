@@ -6,7 +6,7 @@ This [fabrikate](https://github.com/microsoft/fabrikate) component installs the 
 - [Filebeat](https://www.elastic.co/products/beats/filebeat)
 - [Kibana](https://www.elastic.co/products/kibana)
 
-By default, it enables the filebeat [kubernetes provider](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html) which watches for Kubernetes pods to start, update and stop.
+By default, it enables the filebeat [kubernetes provider](https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html) which watches for Kubernetes pods to start, update and stop. The component is also configured in `common.yaml` to output logs to elastic search.
 
 Filebeat supports various ways for monitoring and forwarding logs. Check the [official documentation](https://www.elastic.co/products/beats/filebeat) for more information on the different options.
 
