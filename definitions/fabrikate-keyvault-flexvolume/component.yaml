@@ -5,5 +5,5 @@ path: "./tmp"
 hooks:
   before-install:
     - curl -OL https://raw.githubusercontent.com/Azure/kubernetes-keyvault-flexvol/master/deployment/kv-flexvol-installer.yaml
-    - mkdir tmp
+    - mkdir -p tmp
     - mv kv-flexvol-installer.yaml tmp
