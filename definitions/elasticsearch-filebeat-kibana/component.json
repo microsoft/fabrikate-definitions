@@ -1,5 +1,5 @@
 {
-  "name": "elasticsearch-logstash-kibana",
+  "name": "elasticsearch-filebeat-kibana",
   "generator": "static",
   "type": "static",
   "path": "./manifests",
