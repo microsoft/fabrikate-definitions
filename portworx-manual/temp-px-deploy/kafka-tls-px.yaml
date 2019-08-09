@@ -1,0 +1,49 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: px-cluster
+spec:
+  kafka:
+    version: 2.2.1
+    replicas: 3
+    listeners:
+      external:
+        type: loadbalancer
+        tls: false # by default true
+      tls:
+        authentication:
+          type: tls
+    config:
+      log.message.format.version: "2.2"
+      ssl.client.auth: "required"
+    tlsSidecar:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 64Mi
+        limits:
+          cpu: 500m
+          memory: 128Mi
+    storage:
+      type: persistent-claim
+      class: portworx-sc-rep3
+      size: 20Gi
+      deleteClaim: false
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      class: portworx-sc
+      size: 2Gi
+      deleteClaim: false
+    tlsSidecar:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 64Mi
+        limits:
+          cpu: 500m
+          memory: 128Mi
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

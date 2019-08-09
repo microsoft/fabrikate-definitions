@@ -601,7 +601,7 @@ spec:
         - -b
         - -c
         # Needs to be replaced the cluster ID with a uuid every time portworx is deployed to a cluster for trial validation
-        - mycluster-00bede14-da12-4df8-88bf-5f73b3f2577e
+        - pxcluster-00bede14-da12-4df8-88bf-5f73b3f2577e
         - -secret_type
         - k8s
         - -x

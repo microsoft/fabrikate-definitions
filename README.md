@@ -10,7 +10,8 @@ The following components are deployed on to your AKS cluster:
 * Confluent Schema Registry
 * Prometheus
 * Grafana
-* [Stork & Portworx](/portworx-manual/Portworx.md) (Disabled by Default)
+* [Stork & Portworx](/portworx-manual/README.md) (Disabled by Default)
+
 
 ## Installation Instructions
 
