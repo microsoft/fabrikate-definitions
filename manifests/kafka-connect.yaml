@@ -2,6 +2,7 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaConnect
 metadata:
   name: kconnect-cluster
+  namespace: kafka
   labels:
     app: kconnect-cluster
 spec:
