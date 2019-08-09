@@ -28,6 +28,7 @@ spec:
               app: fabrikate-kafka
     config:
       log.message.format.version: "2.2"
+      ssl.client.auth: "required"
     tlsSidecar:
       resources:
         requests:
@@ -37,13 +38,10 @@ spec:
           cpu: 500m
           memory: 128Mi
     storage:
-      type: jbod
-      volumes:
-      - id: 0
-        class: managed-premium
-        type: persistent-claim
-        size: 64Gi
-        deleteClaim: false
+      type: persistent-claim
+      class: portworx-sc-rep3
+      size: 20Gi
+      deleteClaim: false
     metrics:
       # Inspired by config from Kafka 2.0.0 example rules:
       # https://github.com/prometheus/jmx_exporter/blob/master/example_configs/kafka-2_0_0.yml
@@ -145,8 +143,8 @@ spec:
     replicas: 3
     storage:
       type: persistent-claim
-      class: managed-premium
-      size: 32Gi
+      class: portworx-sc
+      size: 2Gi
       deleteClaim: false
     tlsSidecar:
       resources:
