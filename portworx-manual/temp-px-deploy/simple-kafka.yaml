@@ -1,0 +1,28 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: px-cluster
+spec:
+  kafka:
+    version: 2.2.1
+    replicas: 3
+    listeners:
+      plain: {}
+      tls: {}
+    config:
+      log.message.format.version: "2.2"
+    storage:
+      type: persistent-claim
+      class: portworx-sc-rep3
+      size: 20Gi
+      deleteClaim: false
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      class: portworx-sc
+      size: 2Gi
+      deleteClaim: false
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
