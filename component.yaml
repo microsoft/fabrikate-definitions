@@ -21,3 +21,8 @@ subcomponents:
     source: ""
     path: "/helm-chart/kafka-cluster"
     method: "local"
+  # - name: "portworx"
+  #   type: helm
+  #   source: https://github.com/portworx/helm
+  #   method: git
+  #   path: charts/portworx

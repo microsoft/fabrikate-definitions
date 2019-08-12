@@ -1,0 +1,4 @@
+test/temp
+generated/
+helm_repos/
+.DS_Store
