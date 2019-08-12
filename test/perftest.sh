@@ -24,6 +24,7 @@ fi
 kubectl apply -n kafka -f kafka-topics.yaml
 kubectl apply -n kafka -f kafka-users.yaml
 kubectl apply -n kafka -f kafka-client.yaml
+kubectl apply -n kafka -f zookeeper-sidecar.yaml
 
 sleep 5s
 
@@ -39,31 +40,67 @@ setup_kafka_client_ssl () {
 # Comment following line if you don't want to use ssl.
 setup_kafka_client_ssl
 
-echo "Single thread, no replication"
+echo -e "\nSingle thread, no replication"
 kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
   --topic test-one-rep --num-records $NUM_RECORDS --record-size $RECORD_SIZE \
   --throughput $THROUGHPUT --producer-props \
   acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196 \
   --producer.config /opt/kafka/config/ssl-config.properties
 
-exit 1
+sleep 3s
 
-echo "Single-thread, async 3x replication"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196
+echo -e "\nSingle-thread, async 3x replication"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
+ --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE \
+ --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME \
+  buffer.memory=$BUFFER_MEMORY batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
 
-echo "Single-thread, sync 3x replication"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=-1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=64000
+sleep 3s
 
-echo "Three Producers, 3x async replication"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196 && kubectl exec -it kafkaclient-1 -- bin/kafka-producer-perf-test.sh --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196 && kubectl exec -it kafkaclient-2 -- bin/kafka-producer-perf-test.sh --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196
+echo -e "\nSingle-thread, sync 3x replication"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
+ --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT \
+ --producer-props acks=-1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY \
+  batch.size=64000 --producer.config /opt/kafka/config/ssl-config.properties
 
-echo "Consumer throughput"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh --zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+sleep 3s
 
-echo "3 Consumers"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh --zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1 && kubectl exec -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh --zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1 && kubectl exec -it kafkaclient-2 -- bin/kafka-consumer-perf-test.sh --zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+echo -e "\nThree Producers, 3x async replication"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
+ --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT \
+ --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY  \
+ batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
+kubectl exec -n kafka -it kafkaclient-1 -- bin/kafka-producer-perf-test.sh \
+ --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT \
+ --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY  \
+ batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
+kubectl exec -it -n kafka kafkaclient-2 -- bin/kafka-producer-perf-test.sh \
+ --topic test --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT \
+ --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY \
+ batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
 
-echo "Producer and Consumer"
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-topics.sh --zookeeper $ZOOKEEPER_NAME --create --topic test-producer-consumer --partitions 6 --replication-factor 3 
-kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh --topic test-producer-consumer --num-records $NUM_RECORDS --record-size $RECORD_SIZE --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME buffer.memory=$BUFFER_MEMORY batch.size=8196
-kubectl exec -n kafka -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh --zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test-producer-consumer --threads 1
+sleep 3s
+
+echo -e "\nConsumer throughput"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh \
+--zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+
+sleep 3s
+
+echo -e "\n3 Consumers"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh \
+--zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+kubectl exec -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh \
+--zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+kubectl exec -it kafkaclient-2 -- bin/kafka-consumer-perf-test.sh \
+--zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+
+sleep 3s
+
+echo -e "\nProducer and Consumer"
+kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
+ --topic test-producer-consumer --num-records $NUM_RECORDS --record-size $RECORD_SIZE \
+ --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME \
+ buffer.memory=$BUFFER_MEMORY batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
+kubectl exec -n kafka -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh \
+--zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test-producer-consumer --threads 1
