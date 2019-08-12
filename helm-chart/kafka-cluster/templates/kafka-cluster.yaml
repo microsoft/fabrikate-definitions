@@ -6,22 +6,28 @@ metadata:
 spec:
   kafka:
     version: 2.2.1
-    replicas: 1
+    replicas: 3
     logging:
       type: inline
       loggers:
-        kafka.root.logger.level: DEBUG
-        log4j.logger.org.I0Itec.zkclient.ZkClient: DEBUG
-        log4j.logger.org.apache.zookeeper: DEBUG
-        log4j.logger.kafka: DEBUG
-        log4j.logger.org.apache.kafka: DEBUG
-        log4j.logger.kafka.request.logger: DEBUG
-        log4j.logger.kafka.network.Processor: DEBUG
-        log4j.logger.kafka.server.KafkaApis: DEBUG
-        log4j.logger.kafka.controller: DEBUG
-        log4j.logger.kafka.log.LogCleaner: DEBUG
-        log4j.logger.state.change.logger: DEBUG
-        log4j.logger.kafka.authorizer.logger: DEBUG
+        kafka.root.logger.level: INFO, kafkaAppender
+        log4j.logger.org.I0Itec.zkclient.ZkClient: INFO
+        log4j.logger.org.apache.zookeeper: INFO
+        log4j.logger.kafka: INFO
+        log4j.logger.org.apache.kafka: INFO
+        log4j.logger.kafka.request.logger: INFO
+        log4j.logger.kafka.network.Processor: INFO
+        log4j.logger.kafka.server.KafkaApis: INFO
+        log4j.logger.kafka.controller: INFO
+        log4j.logger.kafka.log.LogCleaner: INFO
+        log4j.logger.state.change.logger: INFO
+        log4j.logger.kafka.authorizer.logger: INFO
+        # log4j server.log
+        log4j.appender.kafkaAppender: org.apache.log4j.DailyRollingFileAppender
+        log4j.appender.kafkaAppender.DatePattern: "'.'yyyy-MM-dd-HH"
+        log4j.appender.kafkaAppender.File: {{ .Values.kafkaLogDirs }}/server.log
+        log4j.appender.kafkaAppender.layout: org.apache.log4j.PatternLayout
+        log4j.appender.kafkaAppender.layout.ConversionPattern: '[%d] %p %m (%c)%n'
     listeners:
       plain:
         networkPolicyPeers:
