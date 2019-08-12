@@ -6,7 +6,6 @@
   "subcomponents": [
     {
       "name": "elasticsearch",
-      "generator": "helm",
       "type": "helm",
       "source": "https://github.com/elastic/helm-charts",
       "method": "git",
@@ -14,7 +13,6 @@
     },
     {
       "name": "kibana",
-      "generator": "helm",
       "type": "helm",
       "source": "https://github.com/elastic/helm-charts",
       "method": "git",
@@ -22,7 +20,6 @@
     },
     {
       "name": "filebeat",
-      "generator": "helm",
       "type": "helm",
       "source": "https://github.com/elastic/helm-charts",
       "method": "git",
