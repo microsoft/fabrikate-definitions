@@ -33,13 +33,18 @@ spec:
         - name: USER_CRT
           valueFrom:
             secretKeyRef:
-              name: perftest-user
+              name: test-user
               key: user.crt
         - name: USER_KEY
           valueFrom:
             secretKeyRef:
-              name: perftest-user
+              name: test-user
               key: user.key
+        - name: MM_CA_CRT
+          valueFrom:
+            secretKeyRef:
+              name: mirror-maker-cluster-ca-cert
+              key: ca.crt
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

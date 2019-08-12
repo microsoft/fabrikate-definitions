@@ -37,3 +37,18 @@ spec:
     - podSelector:
         matchLabels:
           app: prometheus
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-kafka-connect
+  namespace: kafka
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/name: kconnect-cluster
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prometheus

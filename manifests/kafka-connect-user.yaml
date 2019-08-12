@@ -1,7 +1,7 @@
 apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaUser
 metadata:
-  name: test-user
+  name: kafka-connect-user
   namespace: kafka
   labels:
     strimzi.io/cluster: kcluster
@@ -13,16 +13,6 @@ spec:
     acls:
       - resource:
           type: topic
-          name: test
-          patternType: literal
-        operation: All
-      - resource:
-          type: topic
-          name: test-one-rep
-          patternType: literal
-        operation: All
-      - resource:
-          type: topic
-          name: test-replication
+          name: kconnect-mongodb-topic
           patternType: literal
         operation: All

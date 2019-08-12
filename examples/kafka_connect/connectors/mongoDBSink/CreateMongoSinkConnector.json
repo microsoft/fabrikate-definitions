@@ -1,0 +1,33 @@
+{
+    "name": "mongo-sink-connector",
+    "config": {
+        "topics": "kconnect-mongodb-topic",
+        "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+        "tasks.max": "1",
+        "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schema.registry.url": "http://localhost:8081",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schema.registry.url": "http://localhost:8081",
+        "value.converter.schemas.enable": "false",
+        "connection.uri": "mongodb+srv://<username>:<password>@<cluster>/<database>",
+        "database": "<my-database>",
+        "collection": "<my-collection>",
+        "max.num.retries": "3",
+        "retries.defer.timeout": "5000",
+        "key.projection.type": "none",
+        "key.projection.list": "",
+        "value.projection.type": "none",
+        "value.projection.list": "",
+        "field.renamer.mapping": "[]",
+        "field.renamer.regex": "[]",
+        "document.id.strategy": "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy",
+        "post.processor.chain": "com.mongodb.kafka.connect.sink.processor.DocumentIdAdder",
+        "delete.on.null.values": "false",
+        "writemodel.strategy": "com.mongodb.kafka.connect.sink.writemodel.strategy.ReplaceOneDefaultStrategy",
+        "max.batch.size ": "0",
+        "rate.limiting.timeout": "0",
+        "rate.limiting.every.n": "0",
+        "topic.override.sourceB.collection": "sourceB",
+        "topic.override.sourceB.document.id.strategy": "com.mongodb.kafka.connect.sink.processor.id.strategy.ProvidedInValueStrategy"
+    }
+} 
