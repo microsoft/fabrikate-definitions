@@ -1,0 +1,29 @@
+{
+  "name": "elasticsearch-filebeat-kibana",
+  "generator": "static",
+  "type": "static",
+  "path": "./manifests",
+  "subcomponents": [
+    {
+      "name": "elasticsearch",
+      "type": "helm",
+      "source": "https://github.com/elastic/helm-charts",
+      "method": "git",
+      "path": "elasticsearch"
+    },
+    {
+      "name": "kibana",
+      "type": "helm",
+      "source": "https://github.com/elastic/helm-charts",
+      "method": "git",
+      "path": "kibana"
+    },
+    {
+      "name": "filebeat",
+      "type": "helm",
+      "source": "https://github.com/elastic/helm-charts",
+      "method": "git",
+      "path": "filebeat"
+    }
+  ]
+}
