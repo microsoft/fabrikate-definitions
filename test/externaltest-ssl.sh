@@ -44,6 +44,30 @@ kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
 
 sleep 2
 
+# Deploy test user with access to test topic
+echo "apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: ${TESTING_TOPIC}-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: ${TESTING_TOPIC}
+          patternType: literal
+        operation: All"  > temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+sleep 2
+
 # Get test user credentials
 echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.crt
 echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.key']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.key
@@ -52,7 +76,11 @@ echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.key']}"
 echo `kubectl get secrets kcluster-cluster-ca-cert -o jsonpath="{.data['ca\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/ca.crt
 
 # Create kafkacat.config file
-echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}" > temp/${TESTING_TOPIC}/kafkacat.config
+echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}
+security.protocol=ssl
+ssl.key.location=temp/${TESTING_TOPIC}/user.key
+ssl.certificate.location=temp/${TESTING_TOPIC}/user.crt
+ssl.ca.location=temp/${TESTING_TOPIC}/ca.crt" > temp/${TESTING_TOPIC}/kafkacat.config
 
 # Create random test messages
 MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}/input-messages.txt"
