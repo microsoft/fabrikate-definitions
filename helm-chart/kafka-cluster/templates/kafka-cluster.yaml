@@ -31,7 +31,7 @@ spec:
     listeners:
       external:
         type: loadbalancer
-        tls: false # by default true
+        tls: {{ .Values.externalLoadBalancerTls }}
       plain:
         networkPolicyPeers:
         - podSelector:
