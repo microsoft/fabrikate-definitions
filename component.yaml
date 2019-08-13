@@ -16,6 +16,11 @@ subcomponents:
     source: "https://github.com/microsoft/fabrikate-definitions.git"
     path: "definitions/fabrikate-prometheus-grafana"
     method: "git"
+  - name: "kafka-cluster"
+    type: "helm"
+    source: ""
+    path: "/helm-chart/kafka-cluster"
+    method: "local"
   # - name: "portworx"
   #   type: helm
   #   source: https://github.com/portworx/helm
