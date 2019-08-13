@@ -1,9 +1,68 @@
 #! /usr/bin/env bash
 
+#### CONSTANTS --------------------------------
 YELLOW='\033[1;33m'
 RED='\033[1;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
+
+#### FUNCTIONS --------------------------------
+create_and_deploy_kafka_test_topic_yaml()
+{
+    TESTING_TOPIC=$1
+echo "apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: ${TESTING_TOPIC}
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 3
+  replicas: 2
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824" > temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+
+    kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+
+    sleep 2
+}
+
+create_and_deploy_kafka_test_user_yaml()
+{
+    TESTING_TOPIC=$1
+echo "apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: ${TESTING_TOPIC}-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: ${TESTING_TOPIC}
+          patternType: literal
+        operation: All" > temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+    kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+    sleep 2
+}
+
+cleanup_cluster()
+{
+    TESTING_TOPIC=$1
+    kubectl delete --recursive -f ./temp/${TESTING_TOPIC}
+}
+
+#### MAIN --------------------------------
 
 # Get Broker LoadBalancer Address
 BROKER_LB_IP=`kubectl get svc -n kafka kcluster-kafka-external-bootstrap --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
@@ -25,34 +84,40 @@ echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 # Create testing directory
 mkdir temp/${TESTING_TOPIC}
 
-# Deploy test topic via Strimzi KafkaTopic CRD
-echo "apiVersion: kafka.strimzi.io/v1beta1
-kind: KafkaTopic
-metadata:
-  name: ${TESTING_TOPIC}
-  namespace: kafka
-  labels:
-    strimzi.io/cluster: kcluster
-spec:
-  partitions: 3
-  replicas: 2
-  config:
-    retention.ms: 7200000
-    segment.bytes: 1073741824" > temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+# Deploy test topic
+create_and_deploy_kafka_test_topic_yaml $TESTING_TOPIC
 
 kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
 
 sleep 2
 
-# Get test user credentials
-echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.crt
-echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.key']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.key
+# Create Kafkacat configuration based if TLS/SSL enforcement is enabled
+if [ $1 == "-t" ]; then
+    # TLS Enabled on cluster
+    echo "${YELLOW}Configuring Kafkacat with SSL${NC}"
+    # Deploy test user with access to test topic
+    create_and_deploy_kafka_test_user_yaml $TESTING_TOPIC
 
-# Get kafka cluster CA cert
-echo `kubectl get secrets kcluster-cluster-ca-cert -o jsonpath="{.data['ca\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/ca.crt
+    # Get test user credentials
+    echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.crt
+    echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.key']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.key
 
-# Create kafkacat.config file
-echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}" > temp/${TESTING_TOPIC}/kafkacat.config
+    # Get kafka cluster CA cert
+    echo `kubectl get secrets kcluster-cluster-ca-cert -o jsonpath="{.data['ca\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/ca.crt
+
+    # Create kafkacat.config file
+    echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}
+    security.protocol=ssl
+    ssl.key.location=temp/${TESTING_TOPIC}/user.key
+    ssl.certificate.location=temp/${TESTING_TOPIC}/user.crt
+    ssl.ca.location=temp/${TESTING_TOPIC}/ca.crt" > temp/${TESTING_TOPIC}/kafkacat.config
+  
+  else 
+    echo "${YELLOW}Configuring Kafkacat without SSL${NC}"
+    # TLS Disabled on cluster
+    # Create kafkacat.config file
+    echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}" > temp/${TESTING_TOPIC}/kafkacat.config
+fi
 
 # Create random test messages
 MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}/input-messages.txt"
@@ -78,7 +143,7 @@ sleep 5
 kill $CONSUMER_PID
 
 # Delete test topic and user
-kubectl delete --recursive -f ./temp/${TESTING_TOPIC}
+cleanup_cluster $TESTING_TOPIC
 
 # Compare contents of input and output
 SORTED_INPUT="./temp/${TESTING_TOPIC}/sorted-input.txt"
