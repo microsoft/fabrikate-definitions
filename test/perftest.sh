@@ -5,9 +5,6 @@ if [ -z "$KAFKA_BROKER_NAME" ]; then
   # Switch if you don't want to use ssl.
   KAFKA_BROKER_NAME="kcluster-kafka-brokers.kafka:9093"
 fi
-if [ -z "$ZOOKEEPER_NAME" ]; then
-  ZOOKEEPER_NAME="zoo-entrance.kafka:2181"
-fi
 if [ -z "$NUM_RECORDS" ]; then
   NUM_RECORDS=50000000
 fi
@@ -83,17 +80,21 @@ sleep 3s
 
 echo -e "\nConsumer throughput"
 kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh \
---zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+--broker-list $KAFKA_BROKER_NAME --messages $NUM_RECORDS --topic test --threads 1 \
+--consumer.config /opt/kafka/config/ssl-config.properties
 
 sleep 3s
 
 echo -e "\n3 Consumers"
 kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-consumer-perf-test.sh \
---zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+--broker-list $KAFKA_BROKER_NAME --messages $NUM_RECORDS --topic test --threads 1 \
+--consumer.config /opt/kafka/config/ssl-config.properties
 kubectl exec -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh \
---zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+--broker-list $KAFKA_BROKER_NAME --messages $NUM_RECORDS --topic test --threads 1 \
+--consumer.config /opt/kafka/config/ssl-config.properties
 kubectl exec -it kafkaclient-2 -- bin/kafka-consumer-perf-test.sh \
---zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test --threads 1
+--broker-list $KAFKA_BROKER_NAME --messages $NUM_RECORDS --topic test --threads 1 \
+--consumer.config /opt/kafka/config/ssl-config.properties
 
 sleep 3s
 
@@ -103,4 +104,5 @@ kubectl exec -n kafka -it kafkaclient-0 -- bin/kafka-producer-perf-test.sh \
  --throughput $THROUGHPUT --producer-props acks=1 bootstrap.servers=$KAFKA_BROKER_NAME \
  buffer.memory=$BUFFER_MEMORY batch.size=8196 --producer.config /opt/kafka/config/ssl-config.properties
 kubectl exec -n kafka -it kafkaclient-1 -- bin/kafka-consumer-perf-test.sh \
---zookeeper $ZOOKEEPER_NAME --messages $NUM_RECORDS --topic test-producer-consumer --threads 1
+--broker-list $KAFKA_BROKER_NAME --messages $NUM_RECORDS --topic test-producer-consumer --threads 1 \
+--consumer.config /opt/kafka/config/ssl-config.properties
