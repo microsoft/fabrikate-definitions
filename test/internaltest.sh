@@ -26,13 +26,12 @@ echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic $TESTING_TOPIC --partitions 3 --replication-factor 2
 
 # Create random test messages
-MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}-input-messages.txt"
+MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}/input-messages.txt"
 
 echo "Creating Input Message file."
 for i in {0..9}
 do
   MESSAGE=`uuidgen`
-  # echo "Message: ${MESSAGE}"
   echo "${MESSAGE}" >> $MESSAGE_INPUT_FILE
 done
 
@@ -42,7 +41,7 @@ cat $MESSAGE_INPUT_FILE
 kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker-list kcluster-kafka-brokers:9092 --topic $TESTING_TOPIC < $MESSAGE_INPUT_FILE
 
 # Consume messages from topic
-MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}-output-messages.txt"
+MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}/output-messages.txt"
 kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
 
 # TODO: verify this also kills the process on kafka client. We cannot remove the topic until the consumer is gone.
@@ -71,8 +70,8 @@ echo "listing topics after deletion"
 kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --list --zookeeper localhost:2181
 
 # Compare contents of input and output
-SORTED_INPUT="./temp/sorted-input.txt"
-SORTED_OUTPUT="./temp/sorted-output.txt"
+SORTED_INPUT="./temp/${TESTING_TOPIC}/sorted-input.txt"
+SORTED_OUTPUT="./temp/${TESTING_TOPIC}/sorted-output.txt"
 sort $MESSAGE_INPUT_FILE > $SORTED_INPUT
 sort $MESSAGE_OUTPUT_FILE > $SORTED_OUTPUT
 

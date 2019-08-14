@@ -21,15 +21,19 @@ The test results will displayed at the end. The script with exit with code 0 for
 - `kubectl` should be configured to point to this cluster
 - The Kafka deployment should be configured with an external loadbalancer listener.
   - [Reference Guide](https://strimzi.io/2019/05/13/accessing-kafka-part-4.html)
-  - Currently TLS is _not_ supported for this test
+  - The External LoadBalancer can have TLS enabled or disabled.
 - `kafkacat` needs to be installed and added to $PATH
+  - on systems with homebrew installed, you can run `brew install kafkacat`
   - [Kafkacat Installation](https://github.com/edenhill/kafkacat#install)
 
 ### Running the test
 
-Simply run `sh ./externaltest.sh`. The script will retrieve the broker's external address 
+Run the testing script as configured below:
+- If the External LoadBalancer is enabled with TLS support: `sh ./externaltest.sh -t`
+- If the External LoadBalancer is NOT enabled with TLS support: `sh ./externaltest.sh`
+  
+The script will deploy a test topic and connect to the brokers through the external loadbalancer IP, utilizing kafkacat as a producer and consumer.
 The test results will displayed at the end. The script with exit with code 0 for success and 1 for failure.
-
 
 # Replication
 

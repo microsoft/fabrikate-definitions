@@ -1,0 +1,5 @@
+config:
+subcomponents:
+  kafka-cluster:
+    config:
+      externalLoadBalancerTls: true

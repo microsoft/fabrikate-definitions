@@ -1,4 +1,5 @@
 test/temp
 generated/
+components/
 helm_repos/
 .DS_Store

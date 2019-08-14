@@ -1,11 +1,69 @@
 #! /usr/bin/env bash
 
+#### CONSTANTS --------------------------------
 YELLOW='\033[1;33m'
 RED='\033[1;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-# TODO: Pass by argument
+#### FUNCTIONS --------------------------------
+create_and_deploy_kafka_test_topic_yaml()
+{
+    TESTING_TOPIC=$1
+echo "apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: ${TESTING_TOPIC}
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 3
+  replicas: 2
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824" > temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+
+    kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+
+    sleep 2
+}
+
+create_and_deploy_kafka_test_user_yaml()
+{
+    TESTING_TOPIC=$1
+echo "apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: ${TESTING_TOPIC}-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: ${TESTING_TOPIC}
+          patternType: literal
+        operation: All" > temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+    kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-user.yaml
+
+    sleep 2
+}
+
+cleanup_cluster()
+{
+    TESTING_TOPIC=$1
+    kubectl delete --recursive -f ./temp/${TESTING_TOPIC}
+}
+
+#### MAIN --------------------------------
+
 # Get Broker LoadBalancer Address
 BROKER_LB_IP=`kubectl get svc -n kafka kcluster-kafka-external-bootstrap --output jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 echo $BROKER_LB_IP
@@ -23,50 +81,73 @@ echo $UUID
 TESTING_TOPIC="topic-${UUID}"
 echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 
-# TODO: Deploy via CRD with kafka-topics.yaml
-# Deploy via kafka broker pod - Alternatively this can be done through the CRD.
-kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic $TESTING_TOPIC --partitions 3 --replication-factor 2
+# Create testing directory
+mkdir temp/${TESTING_TOPIC}
+
+# Deploy test topic
+create_and_deploy_kafka_test_topic_yaml $TESTING_TOPIC
+
+kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
+
+sleep 2
+
+# Create Kafkacat configuration based if TLS/SSL enforcement is enabled
+if [ $1 == "-t" ]; then
+    # TLS Enabled on cluster
+    echo "${YELLOW}Configuring Kafkacat with SSL${NC}"
+    # Deploy test user with access to test topic
+    create_and_deploy_kafka_test_user_yaml $TESTING_TOPIC
+
+    # Get test user credentials
+    echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.crt
+    echo `kubectl get secrets $TESTING_TOPIC-user -o jsonpath="{.data['user\.key']}"` | base64 --decode > temp/${TESTING_TOPIC}/user.key
+
+    # Get kafka cluster CA cert
+    echo `kubectl get secrets kcluster-cluster-ca-cert -o jsonpath="{.data['ca\.crt']}"` | base64 --decode > temp/${TESTING_TOPIC}/ca.crt
+
+    # Create kafkacat.config file
+    echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}
+    security.protocol=ssl
+    ssl.key.location=temp/${TESTING_TOPIC}/user.key
+    ssl.certificate.location=temp/${TESTING_TOPIC}/user.crt
+    ssl.ca.location=temp/${TESTING_TOPIC}/ca.crt" > temp/${TESTING_TOPIC}/kafkacat.config
+  
+  else 
+    echo "${YELLOW}Configuring Kafkacat without SSL${NC}"
+    # TLS Disabled on cluster
+    # Create kafkacat.config file
+    echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}" > temp/${TESTING_TOPIC}/kafkacat.config
+fi
 
 # Create random test messages
-MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}-input-messages.txt"
+MESSAGE_INPUT_FILE="./temp/${TESTING_TOPIC}/input-messages.txt"
 
 echo "Creating Input Message file."
 for i in {0..9}
 do
   MESSAGE=`uuidgen`
-  # echo "Message: ${MESSAGE}"
   echo "${MESSAGE}" >> $MESSAGE_INPUT_FILE
 done
 
 cat $MESSAGE_INPUT_FILE
 
 # Produce messages through Kafkacat - connecting through external LoadBalancer IP
-cat $MESSAGE_INPUT_FILE | kafkacat -P -b $BROKER_EXTERNAL_ADDRESS -t $TESTING_TOPIC
+cat $MESSAGE_INPUT_FILE | kafkacat -P -F temp/${TESTING_TOPIC}/kafkacat.config -t $TESTING_TOPIC
 
 # Consume messages through Kafkacat - connecting through external LoadBalancer IP
-MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}-output-messages.txt"
-kafkacat -C -b $BROKER_EXTERNAL_ADDRESS -t $TESTING_TOPIC > $MESSAGE_OUTPUT_FILE &
+MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}/output-messages.txt"
+kafkacat -C -F temp/${TESTING_TOPIC}/kafkacat.config -t $TESTING_TOPIC > $MESSAGE_OUTPUT_FILE &
 
-# TODO: verify this also kills the process on kafka client. We cannot remove the topic until the consumer is gone.
 CONSUMER_PID=$!
-sleep 10
+sleep 5
 kill $CONSUMER_PID
 
-echo "listing topics"
-kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --list --zookeeper localhost:2181
+# Delete test topic and user
+cleanup_cluster $TESTING_TOPIC
 
-# Delete test topic
-echo "deleting test topic"
-echo "kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic ${TESTING_TOPIC}"
-kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic $TESTING_TOPIC
-
-echo "listing topics after deletion"
-kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --list --zookeeper localhost:2181
-
-# TODO: Compare what was produced and what was consumed.
 # Compare contents of input and output
-SORTED_INPUT="./temp/sorted-input.txt"
-SORTED_OUTPUT="./temp/sorted-output.txt"
+SORTED_INPUT="./temp/${TESTING_TOPIC}/sorted-input.txt"
+SORTED_OUTPUT="./temp/${TESTING_TOPIC}/sorted-output.txt"
 sort $MESSAGE_INPUT_FILE > $SORTED_INPUT
 sort $MESSAGE_OUTPUT_FILE > $SORTED_OUTPUT
 
