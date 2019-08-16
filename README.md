@@ -17,7 +17,7 @@ The following components are deployed on to your AKS cluster:
 1. Follow [instructions](/portworx-manual/README.md#setting-up-portworx-manually) to install Portworx manually on your Kubernetes cluster
 2. Use [Fabrikate](https://github.com/Microsoft/fabrikate) to install and generate this _high level definition_ to produce manifest yaml 
 3. Install [Grafana dashboards](#setting-up-grafana-dashboards) to build your "pane of glass" to enable observability.
-4. Run [tests](/test) to validate your installation 
+4. Run [tests](/test/README.md) to validate your installation 
 
 ## Validations
 
