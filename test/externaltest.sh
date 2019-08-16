@@ -4,7 +4,27 @@
 YELLOW='\033[1;33m'
 RED='\033[1;31m'
 GREEN='\033[0;32m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+MTLS_ON=false
+K_CONNECT_ON=false
+
+#### ARGS AND INPUTS
+while [ ! $# -eq 0 ]
+do
+	case "$1" in
+		-t)
+      echo "${CYAN}mTLS/SSL Support enabled.${NC}"
+      MTLS_ON=true
+			;;
+		-k)
+			echo "${CYAN}Kafka Connect test enabled.${NC}"
+      K_CONNECT_ON=true
+			;;
+	esac
+	shift
+done
 
 #### FUNCTIONS --------------------------------
 create_and_deploy_kafka_test_topic_yaml()
@@ -62,6 +82,57 @@ cleanup_cluster()
     kubectl delete --recursive -f ./temp/${TESTING_TOPIC}
 }
 
+deploy_kafka_connect_connector()
+{
+  # Get MongoDB Credentials from Env Vars.
+
+  # Create connector payload
+  CONNECTOR_FILE="./temp/${TESTING_TOPIC}/create-connector.json"
+  cp ../examples/kafka_connect/connectors/mongoDBSink/CreateMongoSinkConnector.json $CONNECTOR_FILE
+  
+  # 2 "name"
+  KCONNECT_NAME="${TESTING_TOPIC}-connector"
+  echo "Kafka Connect Sink Name: ${KCONNECT_NAME}"
+  sed -i.bak "2s|.*|    \"name\": \"${KCONNECT_NAME}\",|" $CONNECTOR_FILE
+  # 4 "topic"
+  sed -i.bak "4s|.*|        \"topics\": \"${TESTING_TOPIC}\",|" $CONNECTOR_FILE
+  # 12 "connection.uri"
+  sed -i.bak "12s|.*|        \"connection.uri\": \"${MONGODB_CONN_URL}\",|" $CONNECTOR_FILE
+  # 13 "database"
+  sed -i.bak "13s|.*|        \"database\": \"${DATABASE}\",|" $CONNECTOR_FILE
+  # 14 "collection"
+  sed -i.bak "14s|.*|        \"collection\": \"${COLLECTION}\",|" $CONNECTOR_FILE
+
+  # Portforward to kafkaconnect pod & Create Request
+  KCONNECT_POD=`kubectl get pods -n kafka | grep kconnect-cluster-connect | awk '{print $1}'`
+  echo "Kafka Connect Pod: ${KCONNECT_POD}"
+  kubectl -n kafka port-forward $KCONNECT_POD 8083:8083 &
+  KCONNECT_PORT_FORWARD_PID=$!
+
+  sleep 5
+
+  curl -H 'Content-Type: application/json' -X POST -d @$CONNECTOR_FILE http://localhost:8083/connectors
+
+  sleep 5
+  kill $KCONNECT_PORT_FORWARD_PID
+}
+
+remove_kafka_connect_connector()
+{
+  # Portforward to kafkaconnect pod & Create Request
+  KCONNECT_POD=`kubectl get pods -n kafka | grep kconnect-cluster-connect | awk '{print $1}'`
+  echo "Kafka Connect Pod: ${KCONNECT_POD}"
+  kubectl -n kafka port-forward $KCONNECT_POD 8083:8083 &
+  KCONNECT_PORT_FORWARD_PID=$!
+
+  sleep 5
+  
+  curl -X DELETE http://localhost:8083/connectors/$KCONNECT_NAME
+
+  sleep 5
+  kill $KCONNECT_PORT_FORWARD_PID
+}
+
 #### MAIN --------------------------------
 
 # Get Broker LoadBalancer Address
@@ -92,7 +163,7 @@ kubectl apply -f temp/${TESTING_TOPIC}/kafka-test-topic.yaml
 sleep 2
 
 # Create Kafkacat configuration based if TLS/SSL enforcement is enabled
-if [ $1 == "-t" ]; then
+if [ $MTLS_ON == true ]; then
     # TLS Enabled on cluster
     echo "${YELLOW}Configuring Kafkacat with SSL${NC}"
     # Deploy test user with access to test topic
@@ -117,6 +188,11 @@ if [ $1 == "-t" ]; then
     # TLS Disabled on cluster
     # Create kafkacat.config file
     echo "bootstrap.servers=${BROKER_EXTERNAL_ADDRESS}" > temp/${TESTING_TOPIC}/kafkacat.config
+fi
+
+# Deploy Kafka Connect Sink
+if [ $K_CONNECT_ON == true ]; then
+  deploy_kafka_connect_connector
 fi
 
 # Create random test messages
@@ -144,6 +220,11 @@ kill $CONSUMER_PID
 
 # Delete test topic and user
 cleanup_cluster $TESTING_TOPIC
+
+# Deploy Kafka Connect Sink
+if [ $K_CONNECT_ON == true ]; then
+  remove_kafka_connect_connector
+fi
 
 # Compare contents of input and output
 SORTED_INPUT="./temp/${TESTING_TOPIC}/sorted-input.txt"

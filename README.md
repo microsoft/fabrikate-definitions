@@ -31,7 +31,6 @@ Currently Portworx must be installed manually due to the lack of a Helm chart. P
 ## Future Work
 
 - [ ] Work with Portworx on Helm Chart
-- [ ] Enable mTLS on ingress for Kafka load balancer
 - [ ] Enable volume encryption on Portworx volumes
 - [ ] Get past possible VNET issues in Terraform template
 

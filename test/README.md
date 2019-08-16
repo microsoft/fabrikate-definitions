@@ -25,12 +25,23 @@ The test results will displayed at the end. The script with exit with code 0 for
 - `kafkacat` needs to be installed and added to $PATH
   - on systems with homebrew installed, you can run `brew install kafkacat`
   - [Kafkacat Installation](https://github.com/edenhill/kafkacat#install)
+- Optionally, Kafka Connect can be tested if there is a backing database for it.
+  - Instructions can be found under the [kafka connect examples](../examples/kafka_connect)
+  - After the test is run, you can check the collection for the test messages
 
 ### Running the test
 
 Run the testing script as configured below:
 - If the External LoadBalancer is enabled with TLS support: `sh ./externaltest.sh -t`
 - If the External LoadBalancer is NOT enabled with TLS support: `sh ./externaltest.sh`
+- If kafkaconnect is enabled:
+  -  export three variables in your shell:
+        ```
+            export MONGODB_CONN_URL='<mongodb-connection-string>'
+            export DATABASE='<database-name>'
+            export COLLECTION'<collection-name>'
+        ```
+  - add the `-k` flag to the arguments: `sh ./externaltest.sh -t -k`
   
 The script will deploy a test topic and connect to the brokers through the external loadbalancer IP, utilizing kafkacat as a producer and consumer.
 The test results will displayed at the end. The script with exit with code 0 for success and 1 for failure.

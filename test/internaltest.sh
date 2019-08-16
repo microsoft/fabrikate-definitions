@@ -21,6 +21,9 @@ echo $UUID
 TESTING_TOPIC="topic-${UUID}"
 echo "${YELLOW}Test Topic: ${TESTING_TOPIC}${NC}"
 
+# Create testing directory
+mkdir temp/${TESTING_TOPIC}
+
 # TODO: Deploy via CRD with kafka-topics.yaml
 # Deploy via kafka broker pod - Alternatively this can be done through the CRD.
 kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic $TESTING_TOPIC --partitions 3 --replication-factor 2
