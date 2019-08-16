@@ -10,7 +10,7 @@ The following components are deployed on to your AKS cluster:
 * Confluent Schema Registry
 * Prometheus
 * Grafana
-* [Stork & Portworx](/portworx-manual/README.md) (Disabled by Default)
+* Stork & Portworx (Disabled by Default)
 
 
 ## Installation Instructions
@@ -25,7 +25,7 @@ The repository provides multiple tests to help prove the end to end goal. We hav
 
 ## Caveats
 
-Currently Portworx must be installed manually due to the lack of a Helm chart. Please refer to [instructions]() on how to successfuly install this sample.
+Currently Portworx must be installed manually due to the lack of a Helm chart. Please refer to [instructions](#installation-instructions) on how to successfuly install this sample.
 
 ## Future Work
 
