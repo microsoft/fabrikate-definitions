@@ -112,7 +112,7 @@ then
     echo "${RED}Test Failed!!! - There's a difference between input and output!!!${NC}"
     exit 1
 fi
-echo "${GREEN}Check Passed!!! - All input messages are in the output!${NC}"
+echo "${YELLOW}Check Passed!!! - All input messages are in the output!${NC}"
 
 # Check if output and cordoned node output match
 DIFF=`diff ${SORTED_OUTPUT} ${SORTED_CORDON_OUTPUT}`
