@@ -12,7 +12,7 @@ Portworx includes:
 
 ## Setting up Portworx Manually
 
-To configure your Portworx Virtualization layer with Strimzi, use the following steps or run the [`strimzi-px-install.sh`](strimzi-px-install.sh) script.:
+To configure your Portworx Virtualization layer with Strimzi, use the following steps:
 
 ```
 # Create a secret to give Portworx access to Azure APIs
@@ -27,9 +27,36 @@ Typically you would generate custom specs for your portworx config. By default, 
 
 * If you run into issues with Portworx deployment, run a `curl -fsL https://install.portworx.com/px-wipe | bash` to remove Portworx from the cluster then attempt to reinstall again. (Typically takes 1-5 minutes)
 
-For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka.
+For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka. Our storage class [kafka-px-ha-sc.yaml](temp-px-deploy/kafka-px-ha-sc.yaml) creates 2 storage classes for the kafka broker (20gb) and strimzi zookeeper (2gb) stateful sets. The volumes have a replication value of 3, and are encrypted with the `dm-crypt` module for creating, accessing and managing the encrypted volumes. 
 
 > `kubectl create -f temp-px-deploy/kafka-px-ha-sc.yaml`
+
+This example uses a cluster-wide secret that creates default common secret for all the encrypted volumes. 
+
+Create a cluster wide secret in Kubernetes.
+
+> `kubectl -n portworx create secret generic px-vol-encryption --from-literal=cluster-wide-secret-key=<value>`
+
+Now provide Portworx the cluster wide secret key, that acts as the default encryption key for all volumes.
+
+> `PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}') `
+
+> `kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl secrets set-cluster-key --secret cluster-wide-secret-key`
+
+Verify the volume created in Portworx is encrypted.
+
+```
+$ kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl volume list
+ID                      NAME                                            SIZE    HA      SHARED  ENCRYPTED       IO_PRIORITY                                                                                                                                                  STATUS                           SNAP-ENABLED
+274523319607779531      pvc-3eb0dd78-be5b-11e9-aeca-be673ee6aa26        20 GiB  3       no      yes              LOW                                                                                                                                                          up - attached on 10.10.1.4       no
+767420937306799287      pvc-3eb221d1-be5b-11e9-aeca-be673ee6aa26        20 GiB  3       no      yes              LOW                                                                                                                                                          up - attached on 10.10.1.66      no
+488012911325713748      pvc-3eb9ac95-be5b-11e9-aeca-be673ee6aa26        20 GiB  3       no      yes              LOW                                                                                                                                                          up - attached on 10.10.1.35      no
+437217648341665707      pvc-d3c0640f-be1b-11e9-aeca-be673ee6aa26        2 GiB   3       no      yes             LOW                                                                                                                                                          up - attached on 10.10.1.4       no
+688584194086495667      pvc-d3c3d4d0-be1b-11e9-aeca-be673ee6aa26        2 GiB   3       no      yes             LOW                                                                                                                                                          up - attached on 10.10.1.66      no
+989040398349126906      pvc-d3c7c7de-be1b-11e9-aeca-be673ee6aa26        2 GiB   3       no      yes             LOW 
+```
+
+For per volume secrets that use a unique secret for each encrypted volume, follow the instructions [here](https://docs.portworx.com/key-management/kubernetes-secrets/pvc-encryption-using-storageclass/#portworx-encrypted-volumes).
 
 ## How to interact with Portworx
 
@@ -189,4 +216,4 @@ Processed a total of 3 messages
 Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots. To test portworx for backup scenarios run the [`px-snapshottest.sh`](temp-px-perf/px-snapshottest.sh).
 
 
-For more details on how to snapshot volumes using stork check out [here](hhttps://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-annotations/#managing-snapshots-through-kubectl). 
+For more details on how to snapshot volumes using stork check out [here](https://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-3d/#step-1-create-rules). 
