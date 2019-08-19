@@ -21,7 +21,6 @@ fi
 kubectl apply -n kafka -f kafka-topics.yaml
 kubectl apply -n kafka -f kafka-users.yaml
 kubectl apply -n kafka -f kafka-client.yaml
-kubectl apply -n kafka -f zookeeper-sidecar.yaml
 
 sleep 5s
 
