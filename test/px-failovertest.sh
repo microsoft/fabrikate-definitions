@@ -18,7 +18,7 @@ kubectl apply -n kafka -f kafka-client.yaml
 UUID=`uuidgen | awk '{print tolower($0)}'`
 echo $UUID
 
-export TESTING_TOPIC="topic-failover${UUID}"
+export TESTING_TOPIC="topic-px-failover-${UUID}"
 echo "Test Topic: ${TESTING_TOPIC}"
 
 # Create testing directory
@@ -45,7 +45,7 @@ kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-producer.sh --broker
 
 # Consume messages from topic
 MESSAGE_OUTPUT_FILE="./temp/${TESTING_TOPIC}/output-messages.txt"
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9091 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE &
 
 CONSUMER_PID=$!
 sleep 10
@@ -70,7 +70,7 @@ kubectl get pods -n kafka  -o wide
 # Check if messages from topic are still persisted on switched node.
 MESSAGE_OUTPUT_FILE_CORDON="./temp/${TESTING_TOPIC}/cordon-output-messages.txt"
 echo "Kafka broker messages after cordon are written at: " ${MESSAGE_OUTPUT_FILE_CORDON}
-kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9091 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
+kubectl exec -n kafka -i kafkaclient-0 -- bin/kafka-console-consumer.sh --bootstrap-server kcluster-kafka-bootstrap:9092 --topic $TESTING_TOPIC --from-beginning > $MESSAGE_OUTPUT_FILE_CORDON &
 CONSUMER_PID=$!
 sleep 10
 kill $CONSUMER_PID
@@ -100,15 +100,26 @@ kubectl exec -n kafka -ti kcluster-kafka-0 --container kafka -- bin/kafka-topics
 # Compare contents of input and output
 SORTED_INPUT="./temp/${TESTING_TOPIC}/sorted-input.txt"
 SORTED_OUTPUT="./temp/${TESTING_TOPIC}/sorted-output.txt"
+SORTED_CORDON_OUTPUT="./temp/${TESTING_TOPIC}/sorted-cordon-output.txt"
 sort $MESSAGE_INPUT_FILE > $SORTED_INPUT
 sort $MESSAGE_OUTPUT_FILE > $SORTED_OUTPUT
+sort $MESSAGE_OUTPUT_FILE_CORDON > $SORTED_CORDON_OUTPUT
 
+# Check if input and output match
 DIFF=`diff ${SORTED_INPUT} ${SORTED_OUTPUT}`
 if [ "$DIFF" != "" ] 
 then
     echo "${RED}Test Failed!!! - There's a difference between input and output!!!${NC}"
     exit 1
 fi
+echo "${GREEN}Check Passed!!! - All input messages are in the output!${NC}"
 
-echo "${GREEN}Test Passed!!! - All input messages are in the output!${NC}"
+# Check if output and cordoned node output match
+DIFF=`diff ${SORTED_OUTPUT} ${SORTED_CORDON_OUTPUT}`
+if [ "$DIFF" != "" ] 
+then
+    echo "${RED}Test Failed!!! - There's a difference between the output and the corned node output!!!${NC}"
+    exit 1
+fi
+echo "${GREEN}Test Passed!!! - All output messages are in the cordoned output!${NC}"
 exit 0
