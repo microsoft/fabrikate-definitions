@@ -31,15 +31,17 @@ For interoperability with Strimzi & Kafka, create a storage class defining the s
 
 > `kubectl create -f px-helpers/kafka-px-ha-sc.yaml`
 
-This example uses a cluster-wide secret that creates default common secret for all the encrypted volumes. 
+This example uses a cluster-wide secret that creates a default common secret for access to all the encrypted volumes. 
 
 Create a cluster wide secret in Kubernetes.
 
 > `kubectl -n portworx create secret generic px-vol-encryption --from-literal=cluster-wide-secret-key=<value>`
 
-Now provide Portworx the cluster wide secret key, that acts as the default encryption key for all volumes.
+Next wait for the 3 portworx pods to be configured and ready. Use this command to assign the `PX_POD` var to a portworx pod that has been successfully provisioned.
 
 > `PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}') `
+
+Now provide Portworx the cluster wide secret key, that acts as the default encryption key for all volumes.
 
 > `kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl secrets set-cluster-key --secret cluster-wide-secret-key`
 
