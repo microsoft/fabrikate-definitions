@@ -216,4 +216,4 @@ Processed a total of 3 messages
 Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots. To test portworx for backup scenarios run the [`px-snapshottest.sh`](temp-px-perf/px-snapshottest.sh).
 
 
-For more details on how to snapshot volumes using stork check out [here](hhttps://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-annotations/#managing-snapshots-through-kubectl). 
+For more details on how to snapshot volumes using stork check out [here](https://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-3d/#step-1-create-rules). 
