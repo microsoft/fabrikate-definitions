@@ -23,23 +23,25 @@ kubectl create secret generic -n kube-system px-azure --from-literal=AZURE_TENAN
 ```
 Typically you would generate custom specs for your portworx config. By default, our spec uses Premium volume types, 150 GB, Auto Data and Management network interfaces with Stork, GUI enabled. Until the portworx generator has been modified to support the appropriate secret types mentioned above, use the `px-gen-spec.yaml` provided. To customize this config use the api URL to download a custom yaml [https://docs.portworx.com/portworx-install-with-kubernetes/cloud/azure/aks/2-deploy-px/#]
 
-> `kubectl apply -f temp-px-deploy/px-gen-spec.yaml`
+> `kubectl apply -f px-helpers/px-gen-spec.yaml`
 
 * If you run into issues with Portworx deployment, run a `curl -fsL https://install.portworx.com/px-wipe | bash` to remove Portworx from the cluster then attempt to reinstall again. (Typically takes 1-5 minutes)
 
-For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka. Our storage class [kafka-px-ha-sc.yaml](temp-px-deploy/kafka-px-ha-sc.yaml) creates 2 storage classes for the kafka broker (20gb) and strimzi zookeeper (2gb) stateful sets. The volumes have a replication value of 3, and are encrypted with the `dm-crypt` module for creating, accessing and managing the encrypted volumes. 
+For interoperability with Strimzi & Kafka, create a storage class defining the storage requirements like replication factor, snapshot policy, and performance profile for kafka. Our storage class [kafka-px-ha-sc.yaml](px-helpers/kafka-px-ha-sc.yaml) creates 2 storage classes for the kafka broker (20gb) and strimzi zookeeper (2gb) stateful sets. The volumes have a replication value of 3, and are encrypted with the `dm-crypt` module for creating, accessing and managing the encrypted volumes. 
 
-> `kubectl create -f temp-px-deploy/kafka-px-ha-sc.yaml`
+> `kubectl create -f px-helpers/kafka-px-ha-sc.yaml`
 
-This example uses a cluster-wide secret that creates default common secret for all the encrypted volumes. 
+This example uses a cluster-wide secret that creates a default common secret for access to all the encrypted volumes. 
 
 Create a cluster wide secret in Kubernetes.
 
 > `kubectl -n portworx create secret generic px-vol-encryption --from-literal=cluster-wide-secret-key=<value>`
 
-Now provide Portworx the cluster wide secret key, that acts as the default encryption key for all volumes.
+Next wait for the 3 portworx pods to be configured and ready. Use this command to assign the `PX_POD` var to a portworx pod that has been successfully provisioned.
 
 > `PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}') `
+
+Now provide Portworx the cluster wide secret key, that acts as the default encryption key for all volumes.
 
 > `kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl secrets set-cluster-key --secret cluster-wide-secret-key`
 
@@ -109,12 +111,12 @@ Global Storage Pool
 
 ```
 ID                      NAME                                            SIZE    HA      SHARED  ENCRYPTED       IO_PRIORITY     STATUS                    SNAP-ENABLED
-1055831288650462238     pvc-49e634a1-a3fd-11e9-872e-82275ba87b13        2 GiB   3       no      no              LOW             up - attached on 10.240.0.4no
-144040088767070054      pvc-62df858e-a3fd-11e9-872e-82275ba87b13        2 GiB   3       no      no              LOW             up - attached on 10.240.0.5no
-1003379156323793182     pvc-6394d9b7-a3fc-11e9-872e-82275ba87b13        2 GiB   3       no      no              LOW             up - attached on 10.240.0.6no
-924341013124639820      pvc-653a7482-a3fc-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.6no
-283085716488210125      pvc-b3afc5cf-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.5no
-935420839169754560      pvc-c32f46f5-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      no              LOW             up - attached on 10.240.0.4no
+1055831288650462238     pvc-49e634a1-a3fd-11e9-872e-82275ba87b13        2 GiB   3       no      yes              LOW             up - attached on 10.240.0.4no
+144040088767070054      pvc-62df858e-a3fd-11e9-872e-82275ba87b13        2 GiB   3       no      yes              LOW             up - attached on 10.240.0.5no
+1003379156323793182     pvc-6394d9b7-a3fc-11e9-872e-82275ba87b13        2 GiB   3       no      yes              LOW             up - attached on 10.240.0.6no
+924341013124639820      pvc-653a7482-a3fc-11e9-872e-82275ba87b13        20 GiB  3       no      yes              LOW             up - attached on 10.240.0.6no
+283085716488210125      pvc-b3afc5cf-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      yes              LOW             up - attached on 10.240.0.5no
+935420839169754560      pvc-c32f46f5-a3fd-11e9-872e-82275ba87b13        20 GiB  3       no      yes              LOW             up - attached on 10.240.0.4no
 
 ```
 4. Now grab the volume state details for a portworx disk. 
@@ -168,7 +170,11 @@ High Availability and Disaster Recovery are built into Portworx out of the box. 
 
 ### Portworx Failovers
 
-You can simulate the failover for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. `Cordon` prevents any nwly added pods from being scheduled onto the kubernetes cluster. To start, follow the steps below or run the [`px-failovertest.sh`](temp-px-perf/px-failovertest.sh). When the new pod is created it has the same data as the original Pod.
+You can simulate a failover scenario for Portworx by cordoning off one of the nodes and deleting the Kafka Pod deployed on it. `Cordon` prevents any newly added pods from being scheduled onto the kubernetes cluster. Portworx replicated volumes will continue to persist broker topic messages to other cluster volumes. To start, follow the steps below or run the [`px-failovertest.sh`](../test/px-failovertest.sh). When the new pod is created, it has the same data as the original Pod.
+
+![Portworx_failover](content/FailoverTest_Diagram.png)
+
+First cordon a node.
 
 ``` sh
 $ NODE=`kubectl get pods -o wide -n kafka | grep px-cluster-kafka-0 | awk '{print $7}'`
@@ -213,7 +219,4 @@ Processed a total of 3 messages
 
 ### Backing up and restoring a Kafka node through snapshots
 
-Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots. To test portworx for backup scenarios run the [`px-snapshottest.sh`](temp-px-perf/px-snapshottest.sh).
-
-
-For more details on how to snapshot volumes using stork check out [here](https://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-3d/#step-1-create-rules). 
+Portworx supports creating Snapshots for Kubernetes PVCs. When you install STORK, it also creates a storage class called stork-snapshot-sc. This storage class can be used to create PVCs from snapshots. For more details on how to snapshot volumes using stork check out [here](https://docs.portworx.com/portworx-install-with-kubernetes/storage-operations/create-snapshots/snaps-3d/#step-1-create-rules). 
