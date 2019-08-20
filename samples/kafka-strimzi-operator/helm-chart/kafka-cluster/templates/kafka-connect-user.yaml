@@ -1,0 +1,18 @@
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: kafka-connect-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: kconnect-mongodb-topic
+          patternType: literal
+        operation: All

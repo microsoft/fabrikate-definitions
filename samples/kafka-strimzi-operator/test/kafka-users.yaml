@@ -1,0 +1,28 @@
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaUser
+metadata:
+  name: test-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: test
+          patternType: literal
+        operation: All
+      - resource:
+          type: topic
+          name: test-one-rep
+          patternType: literal
+        operation: All
+      - resource:
+          type: topic
+          name: test-replication
+          patternType: literal
+        operation: All

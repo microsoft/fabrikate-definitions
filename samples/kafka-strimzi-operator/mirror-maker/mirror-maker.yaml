@@ -1,0 +1,34 @@
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaMirrorMaker
+metadata:
+  name: mirror-maker
+  namespace: kafka
+spec:
+  version: 2.2.1
+  replicas: 1
+  consumer:
+    bootstrapServers: kcluster-kafka-bootstrap:9093
+    groupId: my-source-group-id
+    tls:
+      trustedCertificates:
+        - secretName: cluster1-cluster-ca-cert
+          certificate: ca.crt
+    authentication:
+      type: tls
+      certificateAndKey:
+        secretName: test-user
+        certificate: user.crt
+        key: user.key
+  producer:
+    bootstrapServers: <DEST-CLUSTER-IP>:9094
+    tls:
+      trustedCertificates:
+        - secretName: mirrormaker-cluster-ca-cert
+          certificate: ca.crt
+    authentication:
+      type: tls
+      certificateAndKey:
+        secretName: mirror-maker-user
+        certificate: user.crt
+        key: user.key
+  whitelist: ".*"
