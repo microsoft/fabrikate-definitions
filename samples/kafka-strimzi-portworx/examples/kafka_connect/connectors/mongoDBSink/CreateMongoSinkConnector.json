@@ -30,4 +30,4 @@
         "topic.override.sourceB.collection": "sourceB",
         "topic.override.sourceB.document.id.strategy": "com.mongodb.kafka.connect.sink.processor.id.strategy.ProvidedInValueStrategy"
     }
-} 
+}
