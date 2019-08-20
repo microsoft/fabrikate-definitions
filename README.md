@@ -30,7 +30,9 @@ Currently Portworx must be installed manually due to the lack of a Helm chart. P
 ## Future Work
 
 - [ ] Work with Portworx on Helm Chart
-- [ ] Enable volume encryption on Portworx volumes
+- [ ] Use a secret store type target of Key Vault for Portworx Volume Secret
+- [ ] Confifgure TLS & SSL with PX-Secure for Portworx Pods
+- [ ] User authentication for accessing Portworx volumes
 - [ ] Get past possible VNET issues in Terraform template
 
 ## Additional Notes
