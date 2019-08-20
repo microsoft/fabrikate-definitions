@@ -1,11 +1,9 @@
 name: fabrikate-linkerd
-generator: static # Deprecated in fabrikate v1.0.0
-type: static # Replaces `generator` in fabrikate v1.0.0
+type: static
 path: "./manifests"
 subcomponents:
   - name: linkerd
-    generator: static # Deprecated in fabrikate v1.0.0
-    type: static # Replaces `generator` in fabrikate v1.0.0
+    type: static
     path: "./manifests"
     hooks:
       before-install:
