@@ -1,6 +1,5 @@
 {
   "name": "elasticsearch-filebeat-kibana",
-  "generator": "static",
   "type": "static",
   "path": "./manifests",
   "subcomponents": [

@@ -1,6 +1,5 @@
 name: istio
-generator: helm # Deprecated in fabrikate v1.0.0
-type: helm # Replaces `generator` in fabrikate v1.0.0
+type: helm
 path: "./tmp/istio-1.1.5/install/kubernetes/helm/istio"
 hooks:
   before-install:
@@ -11,10 +10,8 @@ hooks:
     - rm istio.tar.gz
 subcomponents:
   - name: istio-namespace
-    generator: static # Deprecated in fabrikate v1.0.0
-    type: static # Replaces `generator` in fabrikate v1.0.0
+    type: static
     path: ./manifests
   - name: istio-crd # 1.1 split out CRDs to seperate chart
-    generator: helm # Deprecated in fabrikate v1.0.0
-    type: helm # Replaces `generator` in fabrikate v1.0.0
+    type: helm
     path: "./tmp/istio-1.1.5/install/kubernetes/helm/istio-init"

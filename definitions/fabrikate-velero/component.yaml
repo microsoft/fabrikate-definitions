@@ -1,11 +1,9 @@
 name: "velero"
-generator: helm # Deprecated in fabrikate v1.0.0
-type: helm # Replaces `generator` in fabrikate v1.0.0
+type: helm
 source: "https://github.com/helm/charts"
 method: "git"
 path: "stable/velero"
 subcomponents:
   - name: "static"
-    generator: static # Deprecated in fabrikate v1.0.0
-    type: static # Replaces `generator` in fabrikate v1.0.0
+    type: static
     path: "./manifests"
