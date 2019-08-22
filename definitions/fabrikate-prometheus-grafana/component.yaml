@@ -1,18 +1,15 @@
 name: "prometheus-grafana"
-generator: static # Deprecated in fabrikate v1.0.0
-type: static # Replaces `generator` in fabrikate v1.0.0
+type: static
 path: "./manifests"
 subcomponents:
   - name: "grafana"
-    generator: helm # Deprecated in fabrikate v1.0.0
-    type: helm # Replaces `generator` in fabrikate v1.0.0
+    type: helm
     source: "https://github.com/helm/charts"
     method: "git"
     path: "stable/grafana"
     version: "247a3076790511b21000f4071e41bbf6bf4a8fc4"
   - name: "prometheus"
-    generator: helm # Deprecated in fabrikate v1.0.0
-    type: helm # Replaces `generator` in fabrikate v1.0.0
+    type: helm
     source: "https://github.com/helm/charts"
     method: "git"
     path: "stable/prometheus"

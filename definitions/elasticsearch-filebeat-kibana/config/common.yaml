@@ -1,0 +1,34 @@
+config:
+subcomponents:
+  elasticsearch:
+    namespace: elasticsearch
+    injectNamespace: true
+    config:
+      image: "docker.elastic.co/elasticsearch/elasticsearch-oss"
+      imageTag: "7.3.0"
+      client:
+        exposeTransportPort: true
+        resources:
+          limits:
+            memory: "2048Mi"
+  kibana:
+    namespace: kibana
+    injectNamespace: true
+    config:
+      image: "docker.elastic.co/kibana/kibana-oss"
+      imageTag: "7.3.0"
+      elasticsearchHosts: "http://elasticsearch-master.elasticsearch.svc.cluster.local:9200"
+  filebeat:
+    namespace: filebeat
+    injectNamespace: true
+    config:
+      image: "docker.elastic.co/beats/filebeat-oss"
+      imageTag: "7.3.0"
+      filebeatConfig:
+        filebeat.yml: |-
+          filebeat.autodiscover:
+            providers:
+              - type: kubernetes
+                hints.enabled: true
+          output.elasticsearch:
+            hosts: ['elasticsearch-master.elasticsearch.svc.cluster.local:9200']
