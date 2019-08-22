@@ -361,7 +361,7 @@ subcomponents:
   #   config:
   #     internalKVDB: true
   #     etcdEndPoint: # Set internal KVDB to false if you wish to use a custom etcdEndpoint
-  #     AKSorEKSInstall: true
-  #     envVars: "API_SERVER=http://lighthouse-new.portworx.com;"
+  #     AKSInstall: true
+  #     envVars: "API_SERVER=http://lighthouse-new.portworx.com"
   #     secretType: "k8s"
   #     drives: "type=Premium_LRS,size=150"
