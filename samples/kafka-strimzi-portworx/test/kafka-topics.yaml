@@ -1,0 +1,55 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: test
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: test-one-rep
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 6
+  replicas: 1
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: test-producer-consumer
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: test-replication
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824

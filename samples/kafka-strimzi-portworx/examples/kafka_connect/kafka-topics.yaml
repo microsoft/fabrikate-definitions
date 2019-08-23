@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: kconnect-mongodb-topic
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: kcluster
+spec:
+  partitions: 6
+  replicas: 1
+  config:
+    retention.ms: 7200000
+    segment.bytes: 1073741824
