@@ -1,6 +1,6 @@
-# Velero
+# Elastic Cloud on Kubernetes - (ECK)
 
-This [Fabrikate](https://github.com/microsoft/fabrikate) definition generates the Kubernetes resource manifests for [ECK-Elastic Cloud on Kubernetes](https://github.com/elastic/cloud-on-k8s).
+This [Fabrikate](https://github.com/microsoft/fabrikate) definition generates the Kubernetes resource manifests for [ECK-Elastic Cloud on Kubernetes](https://github.com/elastic/cloud-on-k8s). ECK (Elastic Cloud on Kubernetes) encompasses the Elasticsearch operator.
 
 ## Usage
 
@@ -14,24 +14,14 @@ subcomponents:
     method: "remote-url"
 ```
 
-# Elastic Cloud on Kubernetes - ECK
-
-ECK (Elastic Cloud on Kubernetes) encompasses the Elasticsearch operator.
-
 ## Deploy ECK
 
-1. Monitor the operator logs
-
-> `kubectl -n elastic-system logs -f statefulset.apps/elastic-operator`
-
-
-2. Deploy Elasticsearch
+1. Modify the  Elasticsearch to your configuration
 
 > `kubectl -n elasticsearch apply -f manifests/eck-cluster.yaml`
 
 
-This sample cluster may be already applied.
-
+A quickstart sample cluster is deployed by default.
 
 More information about deploying ECK can be found [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-quickstart.html#k8s-deploy-eck)
 
@@ -47,3 +37,7 @@ You can verify the deployment succeeded by calling the elasticsearch API.
 
 3. Call the endpoint
 > `curl -u "elastic:<password>" -k "https://localhost:9200"`
+
+4. Monitor the operator logs
+
+> `kubectl -n elastic-system logs -f statefulset.apps/elastic-operator`

@@ -1,8 +1,6 @@
 name: "ECK"
-type: static
-source: "./manifests"
 subcomponents:
   - name: "elasticsearch-operator"
     type: static
     source: "https://download.elastic.co/downloads/eck/0.9.0/all-in-one.yaml"
-    method: "remote-url"
+    method: "http"
