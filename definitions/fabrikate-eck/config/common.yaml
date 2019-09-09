@@ -1,0 +1,2 @@
+namespace: "elastic-system"
+injectNamespace: true
