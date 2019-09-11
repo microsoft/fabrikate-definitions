@@ -4,14 +4,22 @@ This [Fabrikate](https://github.com/microsoft/fabrikate) definition generates th
 
 ## Usage
 
-Add the following to your component.yaml:
+For customizing your elasticsearch cluster, modify the quickstart sample in the [eck-cluster.yaml](manifests/eck-cluster.yaml) with your own configuration. The default configuration is listed below:
 
 ```yaml
-subcomponents:
-  - name: "elasticsearch-operator"
-    type: static
-    source: "https://download.elastic.co/downloads/eck/0.9.0/all-in-one.yaml"
-    method: "remote-url"
+apiVersion: elasticsearch.k8s.elastic.co/v1alpha1
+kind: Elasticsearch
+metadata:
+  name: quickstart
+  namespace: elasticsearch
+spec:
+  version: 7.2.0
+  nodes:
+  - nodeCount: 1
+    config:
+      node.master: true
+      node.data: true
+      node.ingest: true
 ```
 
 ## Deploy ECK
@@ -25,7 +33,7 @@ A quickstart sample cluster is deployed by default.
 
 More information about deploying ECK can be found [here](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-quickstart.html#k8s-deploy-eck)
 
-### Verify elasticsearch
+## Verify elasticsearch
 You can verify the deployment succeeded by calling the elasticsearch API.
 
 1. Fetch the elasticsearch password
