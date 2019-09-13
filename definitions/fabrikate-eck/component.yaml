@@ -1,0 +1,6 @@
+name: "ECK"
+subcomponents:
+  - name: "elasticsearch-operator"
+    type: static
+    source: "https://download.elastic.co/downloads/eck/0.9.0/all-in-one.yaml"
+    method: "http"
