@@ -1,0 +1,12 @@
+subcomponents:
+  elasticsearch:
+    namespace: elasticsearch
+    config:
+      name: elasticsearch-fabrikate
+      version: 7.2.0
+      nodes:
+        - nodeCount: 1
+          config:
+            master: true
+            data: true
+            ingest: true

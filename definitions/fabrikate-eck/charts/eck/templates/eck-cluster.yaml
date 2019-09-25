@@ -1,0 +1,15 @@
+apiVersion: elasticsearch.k8s.elastic.co/v1alpha1
+kind: Elasticsearch
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  version: {{ .Values.version }}
+  nodes:
+  {{- range .Values.nodes }}
+    - nodeCount: {{ .nodeCount }}
+      config:
+        node.master: {{ .config.master }}
+        node.data: {{ .config.data }}
+        node.ingest: {{ .config.ingest }}
+  {{- end }}
