@@ -1,3 +1,3 @@
 # fabrikate-kured
 
-Kured Fabricate component
+Kured Fabrikate component
