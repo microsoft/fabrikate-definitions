@@ -1,0 +1,10 @@
+name: "ECK"
+subcomponents:
+  - name: eck-all-in-one
+    type: static
+    method: http
+    source: https://download.elastic.co/downloads/eck/0.9.0/all-in-one.yaml
+  - name: elasticsearch
+    type: helm
+    method: local
+    path: charts/eck
