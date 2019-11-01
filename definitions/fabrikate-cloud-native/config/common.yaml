@@ -28,56 +28,6 @@ subcomponents:
         adapters:
           useAdapterCRDs: false # for performance, will be default in istio 1.2 https://github.com/istio/istio/pull/8356
 
-  jaeger: # Disabled until resolved: https://github.com/istio/istio/pull/13331
-    config:
-    subcomponents:
-      jaeger:
-        config:
-          provisionDataStore:
-            cassandra: false
-            elasticsearch: false
-          storage:
-            type: elasticsearch
-            elasticsearch:
-              scheme: "http"
-              host: "elasticsearch-client.elasticsearch.svc.cluster.local"
-              port: 9200
-          spark:
-            enabled: true
-            resources:
-              limits:
-                cpu: 500m
-                memory: 512Mi
-              requests:
-                cpu: 256m
-                memory: 128Mi
-          collector:
-            replicaCount: 3
-            resources:
-              limits:
-                cpu: 1
-                memory: 1Gi
-              requests:
-                cpu: 500m
-                memory: 512Mi
-          query:
-            replicaCount: 2
-            resources:
-              limits:
-                cpu: 500m
-                memory: 512Mi
-              requests:
-                cpu: 256m
-                memory: 128Mi
-          agent:
-            resources:
-              limits:
-                cpu: 500m
-                memory: 512Mi
-              requests:
-                cpu: 256m
-                memory: 128Mi
-
   prometheus-grafana:
     subcomponents:
       prometheus:

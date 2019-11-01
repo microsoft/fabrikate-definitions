@@ -1,13 +1,13 @@
-name: fabrikate-linkerd
+name: linkerd2
 type: static
 path: "./manifests"
 subcomponents:
-  - name: linkerd
+  - name: linkerd2
     type: static
     path: "./manifests"
     hooks:
       before-install:
         - curl -sL https://run.linkerd.io/install | sh
-        - ~/.linkerd2/bin/linkerd install --ignore-cluster > manifests/linkerd.yaml
+        - ~/.linkerd2/bin/linkerd install --ignore-cluster > manifests/linkerd2.yaml
       after-install:
         - rm -r ~/.linkerd2/bin
