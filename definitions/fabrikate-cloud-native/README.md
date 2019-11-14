@@ -22,9 +22,3 @@ It includes:
 ### Service Mesh (via [fabrikate-istio](../fabrikate-istio))
 
 - [Istio](https://istio.io/): Connect, secure, control, and observe services.
-
-### Distributed Tracing (via [fabrikate-jaeger](../fabrikate-jaeger))
-
-_Presently disabled while Istio identifies better methods for integrating tracing - fabrikate-istio is configured to provide in-memory tracing_
-
-- [Jaeger](https://www.jaegertracing.io/): Distributed transaction, latency, and dependency tracing

@@ -10,5 +10,3 @@ subcomponents:
     source: "../fabrikate-istio"
   - name: "kured"
     source: "../fabrikate-kured"
-  - name: "jaeger"
-    source: "../jaeger-operator"
