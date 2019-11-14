@@ -10,7 +10,6 @@ subcomponents:
             resources:
               requests:
                 storage: 64Gi
-                storageClass: "managed-premium"
   prometheus-grafana:
     config:
     subcomponents:
