@@ -2,6 +2,8 @@
 
 This [fabrikate](http://github.com/microsoft/fabrikate) stack installs Jaeger on your cluster, with a provided "production" configuration.
 
+IMPORTANT NOTE: This component is depreciated in favor of the supported [jaeger-operator](../jaeger-operator) stack.
+
 ### Requirements
 
 - The [fabrikate 0.2.3](http://github.com/microsoft/fabrikate/releases) cli tool installed locally

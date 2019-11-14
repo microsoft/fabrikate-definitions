@@ -2,6 +2,8 @@
 
 An opinionated open platform cloud native Fabrikate stack for operating Kubernetes clusters.
 
+IMPORTANT NOTE:  This stack is depreciated in favor of this [cloud-native stack](../cloud-native).
+
 It includes:
 
 ### Cluster Maintainance (via [fabrikate-kured](../fabrikate-kured))
