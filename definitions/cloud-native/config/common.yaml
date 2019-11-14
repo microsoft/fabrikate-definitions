@@ -1,20 +1,5 @@
 config:
 subcomponents:
-  elasticsearch-fluentd-kibana:
-    subcomponents:
-      elasticsearch:
-        config:
-          podAnnotations:
-            linkerd.io/inject: enabled
-      fluentd-elasticsearch:
-        config:
-          podAnnotations:
-            linkerd.io/inject: enabled
-      kibana:
-        config:
-          podAnnotations:
-            linkerd.io/inject: enabled
-
   kured:
     config:
       extraArgs:
