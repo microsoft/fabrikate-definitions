@@ -4,15 +4,8 @@ subcomponents:
     subcomponents:
       elasticsearch:
         config:
-          client:
-            podAnnotations:
-              linkerd.io/inject: enabled
-          data:
-            podAnnotations:
-              linkerd.io/inject: enabled
-          master:
-            podAnnotations:
-              linkerd.io/inject: enabled
+          podAnnotations:
+            linkerd.io/inject: enabled
       fluentd-elasticsearch:
         config:
           podAnnotations:
