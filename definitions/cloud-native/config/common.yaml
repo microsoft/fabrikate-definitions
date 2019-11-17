@@ -9,7 +9,7 @@ subcomponents:
     config:
       deployment:
         podAnnotations:
-          linkerd.io/inject: enabled
+#          linkerd.io/inject: enabled
           sidecar.jaegertracing.io/inject: "true"
       metrics:
         prometheus:
