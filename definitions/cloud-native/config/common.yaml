@@ -5,20 +5,6 @@ subcomponents:
       extraArgs:
         prometheus-url: http://prometheus-server.prometheus.svc.cluster.local
 
-  prometheus-grafana:
-    subcomponents:
-      prometheus:
-        config:
-          nodeExporter:
-            podAnnotations:
-              linkerd.io/inject: enabled
-          pushgateway:
-            podAnnotations:
-              linkerd.io/inject: enabled
-          server:
-            podAnnotations:
-              linkerd.io/inject: enabled
-
   traefik:
     config:
       deployment:
