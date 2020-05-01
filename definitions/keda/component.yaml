@@ -1,0 +1,10 @@
+name: fabrikate-keda
+subcomponents:
+  - name: keda
+    type: helm
+    source: https://github.com/kedacore/charts
+    method: git
+    path: keda
+  - name: keda-namespace
+    type: static
+    path: ./manifests
