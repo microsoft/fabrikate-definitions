@@ -57,3 +57,5 @@ kubectl exec -it kafkaclient-0 --namespace kafka -- /bin/bash
 kubectl exec -it kafkaclient-1 --namespace kafka -- /bin/bash
 ./bin/kafka-console-consumer.sh --bootstrap-server <DEST-IP>:9094 --topic test-replication --consumer.config config/mm-client-ssl.properties --from-beginning
 ```
+
+> For detail on kafka performance, view the [Kafka Stateful Sample Workload Performance Testing and Metrics Analysis](Kafka-Performance.md)
