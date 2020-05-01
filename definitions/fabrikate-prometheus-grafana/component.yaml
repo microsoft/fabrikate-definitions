@@ -7,7 +7,6 @@ subcomponents:
     source: "https://github.com/helm/charts"
     method: "git"
     path: "stable/grafana"
-    version: "247a3076790511b21000f4071e41bbf6bf4a8fc4"
   - name: "prometheus"
     type: helm
     source: "https://github.com/helm/charts"
