@@ -1,0 +1,5 @@
+config:
+subcomponents:
+  metallb:
+    namespace: metallb-system
+    injectNamespace: true

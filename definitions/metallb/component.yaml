@@ -1,0 +1,14 @@
+{
+  "name": "fabrikate-metallb",
+  "generator": "static",
+  "path": "./manifests",
+  "subcomponents": [
+    {
+      "name": "metallb",
+      "generator": "helm",
+      "source": "https://github.com/helm/charts",
+      "method": "git",
+      "path": "stable/metallb"
+    }
+  ]
+}
