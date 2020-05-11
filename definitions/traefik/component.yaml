@@ -1,0 +1,5 @@
+name: traefik
+type: helm
+method: git
+source: https://github.com/helm/charts
+path: stable/traefik

@@ -1,0 +1,27 @@
+config:
+subcomponents:
+  kured:
+    config:
+      extraArgs:
+        prometheus-url: http://prometheus-server.prometheus.svc.cluster.local
+
+  traefik:
+    config:
+      deployment:
+        podAnnotations:
+#          linkerd.io/inject: enabled
+          sidecar.jaegertracing.io/inject: "true"
+      metrics:
+        prometheus:
+          enabled: true
+      replicas: 1
+      service:
+        annotations:
+          prometheus.io/scrape: true
+          prometheus.io/port: 8080
+      tracing:
+        backend: jaeger
+        jaeger:
+          localAgentHostPort: localhost:6831
+          samplingServerURL: http://localhost:5778/sampling
+

@@ -1,0 +1,3 @@
+name: jaeger-operator
+type: static
+path: "./manifests"

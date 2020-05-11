@@ -1,0 +1,15 @@
+namespace: kube-system
+injectNamespace: true
+config:
+  dashboard:
+    enabled: true
+    auth: {}
+  resources:
+    requests:
+      cpu: 250m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 256Mi
+  rbac:
+    enabled: true

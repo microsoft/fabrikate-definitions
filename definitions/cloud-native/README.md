@@ -2,8 +2,6 @@
 
 An opinionated open platform cloud native Fabrikate stack for operating Kubernetes clusters.
 
-IMPORTANT NOTE:  This stack is depreciated in favor of this [cloud-native stack](../cloud-native).
-
 It includes:
 
 ### Cluster Maintainance (via [fabrikate-kured](../fabrikate-kured))
@@ -21,6 +19,10 @@ It includes:
 - [Elasticsearch](https://www.elastic.co/): Aggregation and query execution
 - [Kibana](https://www.elastic.co/products/kibana): Full text query UI and visualization
 
-### Service Mesh (via [fabrikate-istio](../fabrikate-istio))
+### Service Mesh (via [linkerd](../linkerd))
 
-- [Istio](https://istio.io/): Connect, secure, control, and observe services.
+- [Linkerd](https://linkerd.io/2/overview/): Connect, secure, control, and observe services.
+
+### Distributed Tracing (via [jaeger-operator](../jaeger-operator))
+
+- [Jaeger](https://www.jaegertracing.io/): Distributed transaction, latency, and dependency tracing
