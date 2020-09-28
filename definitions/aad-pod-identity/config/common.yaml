@@ -1,0 +1,19 @@
+config:
+subcomponents:
+  aad-pod-identity:
+    namespace: aad-pod-identity
+    injectNamespace: true
+    installCRDs: true
+    config:
+      mic:
+        prometheusPort: 9090
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "9090"
+          prometheus.io/path: "/metrics"
+      nmi:
+        prometheusPort: 9090
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "9090"
+          prometheus.io/path: "/metrics"
