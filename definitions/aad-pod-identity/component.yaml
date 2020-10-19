@@ -1,4 +1,6 @@
 name: pod-identity
+type: static
+path: "./manifests"
 subcomponents:
 # Workaround for aad-pod-identity Helm Chart not generating CRDs
 - name: aad-pod-identity-crds
