@@ -1,0 +1,15 @@
+name: pod-identity
+type: static
+path: "./manifests"
+subcomponents:
+# Workaround for aad-pod-identity Helm Chart not generating CRDs
+- name: aad-pod-identity-crds
+  type: static
+  method: http
+  source: https://raw.githubusercontent.com/Azure/aad-pod-identity/v1.6.3/charts/aad-pod-identity/crds/crd.yaml
+- name: aad-pod-identity
+  type: helm
+  method: helm
+  source: https://raw.githubusercontent.com/Azure/aad-pod-identity/v1.6.3/charts
+  path: aad-pod-identity
+  version: 2.0.2
